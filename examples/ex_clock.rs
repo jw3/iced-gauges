@@ -8,13 +8,13 @@ use iced_gauges::Ellipse;
 use std::f32::consts::PI;
 
 fn main() -> iced::Result {
-    Gauge::run(Settings {
+    Clock::run(Settings {
         antialiasing: true,
         ..Settings::default()
     })
 }
 
-struct Gauge {
+struct Clock {
     v: time::OffsetDateTime,
     hands: Cache,
     bg: Cache,
@@ -26,7 +26,7 @@ enum Msg {
     Tick(time::OffsetDateTime),
 }
 
-impl Application for Gauge {
+impl Application for Clock {
     type Executor = executor::Default;
     type Message = Msg;
     type Theme = Theme;
@@ -34,7 +34,7 @@ impl Application for Gauge {
 
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
         (
-            Gauge {
+            Clock {
                 v: time::OffsetDateTime::now_local()
                     .unwrap_or_else(|_| time::OffsetDateTime::now_utc()),
                 hands: Default::default(),
@@ -46,7 +46,7 @@ impl Application for Gauge {
     }
 
     fn title(&self) -> String {
-        String::from("Gauge -- Round")
+        String::from("Clock -- Round")
     }
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
@@ -81,7 +81,7 @@ impl Application for Gauge {
     }
 }
 
-impl canvas::Program<Msg> for Gauge {
+impl canvas::Program<Msg> for Clock {
     type State = ();
 
     fn draw(
