@@ -4,7 +4,7 @@ use iced::{executor, Application, Command, Element, Length, Renderer, Subscripti
 use std::time::Duration;
 
 use iced::time;
-use iced_gauges::full_round::Gauge;
+use iced_gauges::half_round_rotated::Gauge;
 
 fn main() -> iced::Result {
     Dashboard::run(Settings {
