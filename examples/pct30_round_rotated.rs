@@ -1,6 +1,6 @@
 use iced::widget::{canvas, container};
-use iced::Settings;
 use iced::{executor, Application, Command, Element, Length, Renderer, Subscription, Theme};
+use iced::{Color, Settings};
 use std::time::Duration;
 
 use iced::time;
@@ -54,6 +54,10 @@ impl Application for Dashboard {
                 } else {
                     self.state = State::Decel(120.0);
                 }
+
+                if v == 100.0 {
+                    self.gauge.update_needle_color(Color::from_rgb8(0xff, 0, 0));
+                }
             }
             State::Decel(v) => {
                 if v <= 0.0 {
@@ -63,6 +67,10 @@ impl Application for Dashboard {
                     let v = v - 1.0;
                     self.state = State::Decel(v);
                     self.gauge.update_value(v);
+                }
+
+                if v == 99.0 {
+                    self.gauge.update_needle_color(Color::BLACK);
                 }
             }
             State::Stop => {}

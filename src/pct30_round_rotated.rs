@@ -10,6 +10,7 @@ pub struct Gauge {
     needle: Cache,
     frame: Cache,
     ticks: Cache,
+    needle_color: Color,
 }
 
 impl Gauge {
@@ -19,11 +20,17 @@ impl Gauge {
             needle: Default::default(),
             frame: Default::default(),
             ticks: Default::default(),
+            needle_color: Color::BLACK,
         }
     }
 
     pub fn update_value(&mut self, v: f32) {
         self.value = v;
+        self.needle.clear();
+    }
+
+    pub fn update_needle_color(&mut self, color: Color) {
+        self.needle_color = color;
         self.needle.clear();
     }
 }
@@ -136,7 +143,7 @@ impl<T> Program<T> for Gauge {
                 frame.rotate(PI * 0.25);
 
                 frame.rotate(self.value as f32 * steps);
-                frame.stroke(&short_hand, thin_stroke(Color::from_rgb8(0xff, 0, 0)));
+                frame.stroke(&short_hand, thin_stroke(self.needle_color));
 
                 frame.translate(Vector::new(0.0, -0.5 * radius));
                 frame.fill_text(format!("{}", self.value));
