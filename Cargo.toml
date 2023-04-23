@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dev-dependencies]
+iced = { version = "0.9", features = ["tokio"] }
 time = { version = "0.3", features = ["local-offset"] }
 
 [dependencies]
-iced = { version = "0.9", features = ["canvas", "tokio", "debug"] }
+iced = { version = "0.9", features = ["canvas", "debug"] }
