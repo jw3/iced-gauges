@@ -8,3 +8,8 @@
         <strong>Gauges for <a href="https://github.com/iced-rs/iced">Iced</a></strong>
     </p>
 </div>
+
+
+## License
+
+Licensed under either of Apache License, Version 2.0 or MIT license at your option

@@ -1,7 +1,17 @@
 [package]
 name = "iced-gauges"
-version = "0.1.0"
+version = "0.0.1"
+authors = ["John Wass <jwass3@gmail.com>"]
+categories = ["gui"]
+description = "Gauges for Iced"
+documentation = "https://docs.rs/iced-gauges"
 edition = "2021"
+exclude = ["examples/*", "screenshots/*"]
+keywords = ["gauges", "iced", "gui", "ui", "widgets"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/jw3/iced-gauges"
+readme = "README.md"
+# rust-version = ""
 
 [dev-dependencies]
 iced = { version = "0.9", features = ["tokio"] }
