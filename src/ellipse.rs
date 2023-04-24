@@ -13,6 +13,15 @@ pub struct Ellipse {
 }
 
 impl Ellipse {
+    pub fn round(r: f32) -> Self {
+        Ellipse {
+            center: Point::ORIGIN,
+            major_curvature: 1.0 / r,
+            minor_radius: r,
+            angle: 0.0,
+        }
+    }
+
     pub fn get_point(&self, angle: Angle) -> Point {
         let pt = self.get_relative_point(angle);
         Point::new(self.center.x + pt.0, self.center.y + pt.1)
