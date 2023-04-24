@@ -1,10 +1,10 @@
 use iced::widget::{canvas, container};
+use iced::Settings;
 use iced::{executor, Application, Command, Element, Length, Renderer, Subscription, Theme};
-use iced::{Color, Settings};
 use std::time::Duration;
 
 use iced::time;
-use iced_gauges::pct30_round_rotated::Gauge;
+use iced_gauges::round::Gauge;
 
 fn main() -> iced::Result {
     Dashboard::run(Settings {
@@ -47,16 +47,12 @@ impl Application for Dashboard {
     fn update(&mut self, _message: Self::Message) -> Command<Self::Message> {
         match self.state {
             State::Accel(v) => {
-                if v < 120.0 {
+                if v < 60.0 {
                     let v = v + 1.0;
                     self.state = State::Accel(v);
                     self.gauge.update_value(v);
                 } else {
-                    self.state = State::Decel(120.0);
-                }
-
-                if v == 100.0 {
-                    self.gauge.update_needle_color(Color::from_rgb8(0xff, 0, 0));
+                    self.state = State::Decel(60.0);
                 }
             }
             State::Decel(v) => {
@@ -67,10 +63,6 @@ impl Application for Dashboard {
                     let v = v - 1.0;
                     self.state = State::Decel(v);
                     self.gauge.update_value(v);
-                }
-
-                if v == 99.0 {
-                    self.gauge.update_needle_color(Color::BLACK);
                 }
             }
             State::Stop => {}

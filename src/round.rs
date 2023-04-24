@@ -1,28 +1,66 @@
-use crate::Ellipse;
+use crate::{Ellipse, Ticks};
+use iced::widget::canvas::path::arc::Elliptical;
+use iced::widget::canvas::path::Builder;
 use iced::widget::canvas::{stroke, Cache, Cursor, Geometry, LineCap, Path, Program, Stroke};
 use iced::{Color, Point, Rectangle, Theme, Vector};
 use std::f32::consts::PI;
 
 pub struct Gauge {
     value: f32,
-    needle: Cache,
-    frame: Cache,
-    ticks: Cache,
+    needle_gfx: Cache,
+    bg_gfx: Cache,
+    ticks_gfx: Cache,
+    pin_gfx: Cache,
+    start_angle: f32,
+    length: f32,
+    rotate: f32,
+    major_ticks: Ticks,
+    minor_ticks: Ticks,
+    min: f32,
+    max: f32,
+    step: f32,
+    bg_color: Color,
+    border_color: Color,
 }
 
 impl Gauge {
     pub fn new() -> Self {
+        // provided
+        let min = 0.0;
+        let max = 60.0;
+        let res = 1.0; // resolution: ie. visible values
+        let length = PI * 0.5;
+
+        // derived
+        let cnt = (max - min) / res;
+        let step = length / cnt;
+
         Self {
             value: 0.0,
-            needle: Default::default(),
-            frame: Default::default(),
-            ticks: Default::default(),
+            needle_gfx: Default::default(),
+            bg_gfx: Default::default(),
+            ticks_gfx: Default::default(),
+            pin_gfx: Default::default(),
+            start_angle: 0.0,
+            length,
+            rotate: PI * 1.5,
+            major_ticks: Ticks { first: 0, every: 5 },
+            minor_ticks: Ticks { first: 0, every: 1 },
+            min,
+            max,
+            step,
+            bg_color: Color::from_rgb8(0x12, 0x93, 0xD8),
+            border_color: Color::BLACK,
         }
     }
 
     pub fn update_value(&mut self, v: f32) {
+        // todo;; what to do about constraining value by min/max?
+        if v < self.min || v > self.max {
+            println!("constratint violation: {} < {} < {}", self.min, v, self.max);
+        }
         self.value = v;
-        self.needle.clear();
+        self.needle_gfx.clear();
     }
 }
 
@@ -36,15 +74,40 @@ impl<T> Program<T> for Gauge {
         bounds: Rectangle,
         _cursor: Cursor,
     ) -> Vec<Geometry> {
-        let frame = self.frame.draw(bounds.size(), |frame| {
+        let bg = self.bg_gfx.draw(bounds.size(), |frame| {
             let center = frame.center();
             let radius = frame.width().min(frame.height()) / 2.5;
+            let width = radius / 100.0;
 
-            let background = Path::circle(center, radius);
-            frame.fill(&background, Color::from_rgb8(0x12, 0x93, 0xD8));
+            let thin_stroke = |color: Color| -> Stroke {
+                Stroke {
+                    width,
+                    style: stroke::Style::Solid(color),
+                    line_cap: LineCap::Round,
+                    ..Stroke::default()
+                }
+            };
+
+            let mut builder = Builder::new();
+            builder.ellipse(Elliptical {
+                center,
+                radii: Vector::new(radius, radius),
+                rotation: self.rotate,
+                start_angle: self.start_angle,
+                end_angle: self.start_angle + self.length,
+            });
+            // todo; =========== dont forget about this one ===============
+            builder.line_to(center);
+            // ============================================================
+            builder.close();
+
+            let background = builder.build();
+
+            frame.fill(&background, self.bg_color);
+            frame.stroke(&background, thin_stroke(self.border_color));
         });
 
-        let needle = self.needle.draw(bounds.size(), |frame| {
+        let needle = self.needle_gfx.draw(bounds.size(), |frame| {
             let center = frame.center();
             let radius = frame.width().min(frame.height()) / 2.5;
 
@@ -58,29 +121,26 @@ impl<T> Program<T> for Gauge {
                 }
             };
 
-            let length = PI * 2.0;
-            let steps = length / 120.0;
-
             let short_hand = Path::line(Point::ORIGIN, Point::new(0.0, -0.5 * radius));
             frame.translate(Vector::new(center.x, center.y));
 
-            frame.rotate(self.value as f32 * steps);
+            frame.rotate(self.value as f32 * self.step);
             frame.stroke(&short_hand, thin_stroke(Color::WHITE));
 
             frame.translate(Vector::new(0.0, -0.5 * radius));
             frame.fill_text(format!("{}", self.value));
         });
 
-        let ticks = self.ticks.draw(bounds.size(), |frame| {
+        let ticks = self.ticks_gfx.draw(bounds.size(), |frame| {
             let center = frame.center();
             let radius = frame.width().min(frame.height()) / 2.5;
             let width = radius / 100.0;
 
-            let thin_stroke = |color: Color| -> Stroke {
+            let stroke = |w: f32, color: Color| -> Stroke {
                 Stroke {
-                    width,
+                    width: w,
                     style: stroke::Style::Solid(color),
-                    line_cap: LineCap::Round,
+                    line_cap: LineCap::Square,
                     ..Stroke::default()
                 }
             };
@@ -88,59 +148,58 @@ impl<T> Program<T> for Gauge {
             frame.with_save(|frame| {
                 frame.translate(Vector::new(center.x, center.y));
 
-                let length = PI * 2.0;
-                let step_12 = length / 12.0;
-
                 frame.rotate(PI * 1.5);
 
-                let outer = Ellipse {
-                    center: Point::ORIGIN,
-                    major_curvature: 1.0 / radius,
-                    minor_radius: radius,
-                    angle: 0.0,
-                };
+                let outer = Ellipse::round(radius);
+                let major = Ellipse::round(radius - 30.0);
+                let minor = Ellipse::round(radius - 10.0);
 
-                let radius2 = radius - 25.0;
-                let inner = Ellipse {
-                    center: Point::ORIGIN,
-                    major_curvature: 1.0 / radius2,
-                    minor_radius: radius2,
-                    angle: 0.0,
-                };
-
-                // hour ticks
-                for a in 0..12 {
-                    let angle = step_12 * a as f32;
-                    let p1 = inner.get_point(angle);
+                let mut i = self.minor_ticks.first as f32;
+                loop {
+                    let angle = self.step * i;
+                    let p1 = minor.get_point(angle);
                     let p2 = outer.get_point(angle);
 
                     let tick = Path::line(p1, p2);
                     frame.with_save(|frame| {
-                        frame.stroke(&tick, thin_stroke(Color::BLACK));
-
+                        frame.stroke(&tick, stroke(width * 0.8, Color::WHITE));
                         frame.translate(Vector::new(p1.x, p1.y));
-                        frame.fill_text(format!("{a}"));
                     });
+
+                    i += self.minor_ticks.every as f32;
+                    if i * self.step >= self.length as f32 {
+                        break;
+                    }
+                }
+
+                let mut i = self.major_ticks.first as f32;
+                loop {
+                    let angle = self.step * i;
+                    let p1 = major.get_point(angle);
+                    let p2 = outer.get_point(angle);
+
+                    let tick = Path::line(p1, p2);
+                    frame.with_save(|frame| {
+                        frame.stroke(&tick, stroke(width * 1.5, Color::BLACK));
+                        frame.translate(Vector::new(p1.x, p1.y));
+                        frame.fill_text(format!("{i}"));
+                    });
+
+                    i += self.major_ticks.every as f32;
+                    if i * self.step >= self.length as f32 {
+                        break;
+                    }
                 }
             });
-
-            let width = radius / 100.0;
-            let thin_stroke = |color: Color| -> Stroke {
-                Stroke {
-                    width,
-                    style: stroke::Style::Solid(color),
-                    line_cap: LineCap::Round,
-                    ..Stroke::default()
-                }
-            };
-
-            let dot = Path::circle(center, radius / 25.0);
-            frame.fill(&dot, Color::BLACK);
-
-            let background = Path::circle(center, radius);
-            frame.stroke(&background, thin_stroke(Color::BLACK));
         });
 
-        vec![frame, needle, ticks]
+        let pin = self.pin_gfx.draw(bounds.size(), |frame| {
+            let center = frame.center();
+            let radius = frame.width().min(frame.height()) / 2.5;
+            let dot = Path::circle(center, radius / 25.0);
+            frame.fill(&dot, Color::BLACK);
+        });
+
+        vec![bg, ticks, pin, needle]
     }
 }
