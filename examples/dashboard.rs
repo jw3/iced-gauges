@@ -33,7 +33,7 @@ impl Application for Dashboard {
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
         (
             Dashboard {
-                gauge: Gauge::new(),
+                gauge: Gauge::new(0.0, 85.0, 0.90, 0.30),
                 state: State::Accel(0.0),
             },
             Command::none(),
@@ -47,12 +47,12 @@ impl Application for Dashboard {
     fn update(&mut self, _message: Self::Message) -> Command<Self::Message> {
         match self.state {
             State::Accel(v) => {
-                if v < 60.0 {
+                if v < 85.0 {
                     let v = v + 1.0;
                     self.state = State::Accel(v);
                     self.gauge.update_value(v);
                 } else {
-                    self.state = State::Decel(60.0);
+                    self.state = State::Decel(85.0);
                 }
             }
             State::Decel(v) => {

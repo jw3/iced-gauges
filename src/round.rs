@@ -3,7 +3,7 @@ use iced::widget::canvas::path::arc::Elliptical;
 use iced::widget::canvas::path::Builder;
 use iced::widget::canvas::{stroke, Cache, Cursor, Geometry, LineCap, Path, Program, Stroke};
 use iced::{Color, Point, Rectangle, Theme, Vector};
-use std::f32::consts::PI;
+use std::f32::consts::{PI, TAU};
 
 pub struct Gauge {
     value: f32,
@@ -11,7 +11,7 @@ pub struct Gauge {
     bg_gfx: Cache,
     ticks_gfx: Cache,
     pin_gfx: Cache,
-    start_angle: f32,
+    dbg_gfx: Cache,
     length: f32,
     rotate: f32,
     major_ticks: Ticks,
@@ -24,14 +24,15 @@ pub struct Gauge {
 }
 
 impl Gauge {
-    pub fn new() -> Self {
-        // provided
-        let min = 0.0;
-        let max = 60.0;
+    // length and rotate are fractions of 1.0 which is a full circle
+    // the value of these can exceed 1.0, in which case it loops
+    pub fn new(min: f32, max: f32, length: f32, rotate: f32) -> Self {
+        // wait for builder impl
         let res = 1.0; // resolution: ie. visible values
-        let length = PI * 0.5;
 
         // derived
+        let rotate = TAU * rotate;
+        let length = TAU * length;
         let cnt = (max - min) / res;
         let step = length / cnt;
 
@@ -41,9 +42,9 @@ impl Gauge {
             bg_gfx: Default::default(),
             ticks_gfx: Default::default(),
             pin_gfx: Default::default(),
-            start_angle: 0.0,
+            dbg_gfx: Default::default(),
             length,
-            rotate: PI * 1.5,
+            rotate,
             major_ticks: Ticks { first: 0, every: 5 },
             minor_ticks: Ticks { first: 0, every: 1 },
             min,
@@ -93,8 +94,8 @@ impl<T> Program<T> for Gauge {
                 center,
                 radii: Vector::new(radius, radius),
                 rotation: self.rotate,
-                start_angle: self.start_angle,
-                end_angle: self.start_angle + self.length,
+                start_angle: 0.0,
+                end_angle: self.length,
             });
             // todo; =========== dont forget about this one ===============
             builder.line_to(center);
@@ -102,7 +103,6 @@ impl<T> Program<T> for Gauge {
             builder.close();
 
             let background = builder.build();
-
             frame.fill(&background, self.bg_color);
             frame.stroke(&background, thin_stroke(self.border_color));
         });
@@ -121,14 +121,19 @@ impl<T> Program<T> for Gauge {
                 }
             };
 
-            let short_hand = Path::line(Point::ORIGIN, Point::new(0.0, -0.5 * radius));
-            frame.translate(Vector::new(center.x, center.y));
+            frame.with_save(|frame| {
+                frame.translate(Vector::new(center.x, center.y));
 
-            frame.rotate(self.value as f32 * self.step);
-            frame.stroke(&short_hand, thin_stroke(Color::WHITE));
+                let tip = Point::new(0.5 * radius, 0.0);
+                let short_hand = Path::line(Point::ORIGIN, tip);
+                frame.rotate(self.rotate);
 
-            frame.translate(Vector::new(0.0, -0.5 * radius));
-            frame.fill_text(format!("{}", self.value));
+                frame.rotate(self.value as f32 * self.step);
+                frame.stroke(&short_hand, thin_stroke(Color::BLACK));
+
+                frame.translate(Vector::new(tip.x, tip.y));
+                frame.fill_text(format!("{}", self.value));
+            });
         });
 
         let ticks = self.ticks_gfx.draw(bounds.size(), |frame| {
@@ -148,7 +153,7 @@ impl<T> Program<T> for Gauge {
             frame.with_save(|frame| {
                 frame.translate(Vector::new(center.x, center.y));
 
-                frame.rotate(PI * 1.5);
+                frame.rotate(self.rotate);
 
                 let outer = Ellipse::round(radius);
                 let major = Ellipse::round(radius - 30.0);
