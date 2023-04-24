@@ -1,4 +1,6 @@
 use crate::{Ellipse, Ticks};
+use iced::widget::canvas::path::arc::Elliptical;
+use iced::widget::canvas::path::Builder;
 use iced::widget::canvas::{stroke, Cache, Cursor, Geometry, LineCap, Path, Program, Stroke};
 use iced::{Color, Point, Rectangle, Theme, Vector};
 use std::f32::consts::PI;
@@ -9,7 +11,9 @@ pub struct Gauge {
     bg_gfx: Cache,
     ticks_gfx: Cache,
     pin_gfx: Cache,
+    start_angle: f32,
     length: f32,
+    rotate: f32,
     major_ticks: Ticks,
     minor_ticks: Ticks,
     min: f32,
@@ -24,11 +28,12 @@ impl Gauge {
         // provided
         let min = 0.0;
         let max = 60.0;
-        let res = 1.0;
+        let res = 1.0; // resolution: ie. visible values
+        let length = PI * 0.5;
 
         // derived
         let cnt = (max - min) / res;
-        let step = PI * 2.0 / cnt;
+        let step = length / cnt;
 
         Self {
             value: 0.0,
@@ -36,7 +41,9 @@ impl Gauge {
             bg_gfx: Default::default(),
             ticks_gfx: Default::default(),
             pin_gfx: Default::default(),
-            length: PI * 2.0,
+            start_angle: 0.0,
+            length,
+            rotate: PI * 1.5,
             major_ticks: Ticks { first: 0, every: 5 },
             minor_ticks: Ticks { first: 0, every: 1 },
             min,
@@ -81,7 +88,21 @@ impl<T> Program<T> for Gauge {
                 }
             };
 
-            let background = Path::circle(center, radius);
+            let mut builder = Builder::new();
+            builder.ellipse(Elliptical {
+                center,
+                radii: Vector::new(radius, radius),
+                rotation: self.rotate,
+                start_angle: self.start_angle,
+                end_angle: self.start_angle + self.length,
+            });
+            // todo; =========== dont forget about this one ===============
+            builder.line_to(center);
+            // ============================================================
+            builder.close();
+
+            let background = builder.build();
+
             frame.fill(&background, self.bg_color);
             frame.stroke(&background, thin_stroke(self.border_color));
         });
@@ -115,11 +136,11 @@ impl<T> Program<T> for Gauge {
             let radius = frame.width().min(frame.height()) / 2.5;
             let width = radius / 100.0;
 
-            let thin_stroke = |color: Color| -> Stroke {
+            let stroke = |w: f32, color: Color| -> Stroke {
                 Stroke {
-                    width,
+                    width: w,
                     style: stroke::Style::Solid(color),
-                    line_cap: LineCap::Round,
+                    line_cap: LineCap::Square,
                     ..Stroke::default()
                 }
             };
@@ -130,8 +151,8 @@ impl<T> Program<T> for Gauge {
                 frame.rotate(PI * 1.5);
 
                 let outer = Ellipse::round(radius);
-                let major = Ellipse::round(radius - 25.0);
-                let minor = Ellipse::round(radius - 5.0);
+                let major = Ellipse::round(radius - 30.0);
+                let minor = Ellipse::round(radius - 10.0);
 
                 let mut i = self.minor_ticks.first as f32;
                 loop {
@@ -141,7 +162,7 @@ impl<T> Program<T> for Gauge {
 
                     let tick = Path::line(p1, p2);
                     frame.with_save(|frame| {
-                        frame.stroke(&tick, thin_stroke(Color::WHITE));
+                        frame.stroke(&tick, stroke(width * 0.8, Color::WHITE));
                         frame.translate(Vector::new(p1.x, p1.y));
                     });
 
@@ -159,7 +180,7 @@ impl<T> Program<T> for Gauge {
 
                     let tick = Path::line(p1, p2);
                     frame.with_save(|frame| {
-                        frame.stroke(&tick, thin_stroke(Color::BLACK));
+                        frame.stroke(&tick, stroke(width * 1.5, Color::BLACK));
                         frame.translate(Vector::new(p1.x, p1.y));
                         frame.fill_text(format!("{i}"));
                     });
