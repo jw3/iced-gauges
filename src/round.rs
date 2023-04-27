@@ -5,6 +5,11 @@ use iced::widget::canvas::{stroke, Cache, Cursor, Geometry, LineCap, Path, Progr
 use iced::{Color, Point, Rectangle, Theme, Vector};
 use std::f32::consts::{PI, TAU};
 
+pub enum Closure {
+    Segment,
+    Sector,
+}
+
 pub struct Gauge {
     value: f32,
     needle_gfx: Cache,
@@ -21,6 +26,7 @@ pub struct Gauge {
     step: f32,
     bg_color: Color,
     border_color: Color,
+    closure: Closure,
 }
 
 impl Gauge {
@@ -52,6 +58,7 @@ impl Gauge {
             step,
             bg_color: Color::from_rgb8(0x12, 0x93, 0xD8),
             border_color: Color::BLACK,
+            closure: Closure::Segment,
         }
     }
 
@@ -89,20 +96,23 @@ impl<T> Program<T> for Gauge {
                 }
             };
 
-            let mut builder = Builder::new();
-            builder.ellipse(Elliptical {
-                center,
-                radii: Vector::new(radius, radius),
-                rotation: self.rotate,
-                start_angle: 0.0,
-                end_angle: self.length,
-            });
-            // todo; =========== dont forget about this one ===============
-            builder.line_to(center);
-            // ============================================================
-            builder.close();
+            let background = match self.closure {
+                Closure::Segment => Path::circle(center, radius),
+                Closure::Sector => {
+                    let mut builder = Builder::new();
+                    builder.ellipse(Elliptical {
+                        center,
+                        radii: Vector::new(radius, radius),
+                        rotation: self.rotate,
+                        start_angle: 0.0,
+                        end_angle: self.length,
+                    });
+                    builder.line_to(center);
+                    builder.close();
+                    builder.build()
+                }
+            };
 
-            let background = builder.build();
             frame.fill(&background, self.bg_color);
             frame.stroke(&background, thin_stroke(self.border_color));
         });
@@ -190,10 +200,10 @@ impl<T> Program<T> for Gauge {
                         frame.fill_text(format!("{i}"));
                     });
 
-                    i += self.major_ticks.every as f32;
                     if i * self.step >= self.length as f32 {
                         break;
                     }
+                    i += self.major_ticks.every as f32;
                 }
             });
         });
