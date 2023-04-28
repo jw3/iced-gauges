@@ -3,7 +3,7 @@ use iced::widget::canvas::path::arc::Elliptical;
 use iced::widget::canvas::path::Builder;
 use iced::widget::canvas::{stroke, Cache, Cursor, Geometry, LineCap, Path, Program, Stroke};
 use iced::{Color, Point, Rectangle, Theme, Vector};
-use std::f32::consts::{PI, TAU};
+use std::f32::consts::TAU;
 
 pub enum Closure {
     Segment,
@@ -16,7 +16,6 @@ pub struct Gauge {
     bg_gfx: Cache,
     ticks_gfx: Cache,
     pin_gfx: Cache,
-    dbg_gfx: Cache,
     length: f32,
     rotate: f32,
     major_ticks: Ticks,
@@ -32,7 +31,15 @@ pub struct Gauge {
 impl Gauge {
     // length and rotate are fractions of 1.0 which is a full circle
     // the value of these can exceed 1.0, in which case it loops
-    pub fn new(min: f32, max: f32, length: f32, rotate: f32) -> Self {
+    pub fn new(
+        min: f32,
+        max: f32,
+        length: f32,
+        rotate: f32,
+        closure: Closure,
+        major_ticks: Ticks,
+        minor_ticks: Ticks,
+    ) -> Self {
         // wait for builder impl
         let res = 1.0; // resolution: ie. visible values
 
@@ -48,17 +55,16 @@ impl Gauge {
             bg_gfx: Default::default(),
             ticks_gfx: Default::default(),
             pin_gfx: Default::default(),
-            dbg_gfx: Default::default(),
             length,
             rotate,
-            major_ticks: Ticks { first: 0, every: 5 },
-            minor_ticks: Ticks { first: 0, every: 1 },
+            major_ticks,
+            minor_ticks,
             min,
             max,
             step,
             bg_color: Color::from_rgb8(0x12, 0x93, 0xD8),
             border_color: Color::BLACK,
-            closure: Closure::Segment,
+            closure,
         }
     }
 
@@ -169,7 +175,7 @@ impl<T> Program<T> for Gauge {
                 let major = Ellipse::round(radius - 30.0);
                 let minor = Ellipse::round(radius - 10.0);
 
-                let mut i = self.minor_ticks.first as f32;
+                let mut i = self.minor_ticks.first;
                 loop {
                     let angle = self.step * i;
                     let p1 = minor.get_point(angle);
@@ -181,13 +187,13 @@ impl<T> Program<T> for Gauge {
                         frame.translate(Vector::new(p1.x, p1.y));
                     });
 
-                    i += self.minor_ticks.every as f32;
-                    if i * self.step >= self.length as f32 {
+                    i += self.minor_ticks.every;
+                    if i * self.step >= self.length {
                         break;
                     }
                 }
 
-                let mut i = self.major_ticks.first as f32;
+                let mut i = self.major_ticks.first;
                 loop {
                     let angle = self.step * i;
                     let p1 = major.get_point(angle);
@@ -200,10 +206,10 @@ impl<T> Program<T> for Gauge {
                         frame.fill_text(format!("{i}"));
                     });
 
-                    if i * self.step >= self.length as f32 {
+                    if i * self.step >= self.length {
                         break;
                     }
-                    i += self.major_ticks.every as f32;
+                    i += self.major_ticks.every;
                 }
             });
         });
