@@ -4,7 +4,8 @@ pub use ellipse::Ellipse;
 mod ellipse;
 pub mod round;
 
+#[derive(Copy, Clone)]
 pub struct Ticks {
-    first: usize,
-    every: usize,
+    pub first: f32,
+    pub every: f32,
 }
