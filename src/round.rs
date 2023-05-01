@@ -6,6 +6,7 @@ use iced::{Color, Point, Rectangle, Theme, Vector};
 use std::f32::consts::TAU;
 
 pub enum Closure {
+    None,
     Segment,
     Sector,
 }
@@ -103,7 +104,7 @@ impl<T> Program<T> for Gauge {
             };
 
             let background = match self.closure {
-                Closure::Segment => Path::circle(center, radius),
+                Closure::None => Path::circle(center, radius),
                 Closure::Sector => {
                     let mut builder = Builder::new();
                     builder.ellipse(Elliptical {
@@ -114,6 +115,18 @@ impl<T> Program<T> for Gauge {
                         end_angle: self.length,
                     });
                     builder.line_to(center);
+                    builder.close();
+                    builder.build()
+                }
+                Closure::Segment => {
+                    let mut builder = Builder::new();
+                    builder.ellipse(Elliptical {
+                        center,
+                        radii: Vector::new(radius, radius),
+                        rotation: self.rotate,
+                        start_angle: 0.0,
+                        end_angle: self.length,
+                    });
                     builder.close();
                     builder.build()
                 }

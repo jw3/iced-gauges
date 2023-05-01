@@ -43,19 +43,19 @@ impl Application for Dashboard {
         (
             Dashboard {
                 gauge: vec![
+                    Gauge::new(0.0, 85.0, 0.35, 0.40, Closure::None, maj, min),
                     Gauge::new(0.0, 85.0, 0.90, 0.30, Closure::Segment, maj, min),
-                    Gauge::new(0.0, 85.0, 0.90, 0.30, Closure::Sector, maj, min),
-                    Gauge::new(0.0, 85.0, 0.35, 0.40, Closure::Segment, maj, min),
-                    Gauge::new(0.0, 85.0, 0.35, 0.90, Closure::Sector, maj, min),
+                    Gauge::new(0.0, 85.0, 0.90, 0.30, Closure::Segment, maj, min),
+                    Gauge::new(0.0, 85.0, 0.35, 0.90, Closure::None, maj, min),
                     Gauge::new(0.0, 85.0, 0.35, 0.40, Closure::Sector, maj, min),
-                    Gauge::new(0.0, 85.0, 0.35, 0.90, Closure::Segment, maj, min),
-                    Gauge::new(0.0, 85.0, 0.75, 0.0, Closure::Segment, maj, min),
+                    Gauge::new(0.0, 85.0, 0.35, 0.90, Closure::None, maj, min),
+                    Gauge::new(0.0, 85.0, 0.75, 0.0, Closure::None, maj, min),
                     Gauge::new(
                         0.0,
                         42.5,
                         1.0,
                         0.75,
-                        Closure::Segment,
+                        Closure::None,
                         Ticks {
                             first: 0.0,
                             every: 2.5,
@@ -101,16 +101,33 @@ impl Application for Dashboard {
     }
 
     fn view(&self) -> Element<'_, Self::Message, Renderer<Self::Theme>> {
-        let mut body = Column::new();
+        // row
+        //  col
+        //   gauge 200x200
+        //   gauge 200x200
+        //  col
+        //   gauge 500x500
+        //   gauge 500x500
+        //  col
+        //   gauge 200x200
+        //   gauge 200x200
+        // row
+        //  indicator leds?....
+
         let mut gauges = self.gauge.iter();
-        for _ in 0..3 {
-            let mut row = Row::new();
-            row = row.push(canvas(gauges.next().unwrap()).width(300).height(300));
-            row = row.push(canvas(gauges.next().unwrap()).width(300).height(300));
-            row = row.push(canvas(gauges.next().unwrap()).width(300).height(300));
-            body = body.push(row);
-        }
-        container(body)
+        let top = Row::new()
+            .push(canvas(gauges.next().unwrap()).width(200).height(200))
+            .push(canvas(gauges.next().unwrap()).width(500).height(500))
+            .push(canvas(gauges.next().unwrap()).width(500).height(500))
+            .push(canvas(gauges.next().unwrap()).width(200).height(200));
+
+        let bottom = Row::new()
+            .push(canvas(gauges.next().unwrap()).width(200).height(200))
+            .push(canvas(gauges.next().unwrap()).width(200).height(200))
+            .push(canvas(gauges.next().unwrap()).width(200).height(200));
+
+        let row = Column::new().push(top).push(bottom);
+        container(Column::new().push(row))
             .width(Length::Fill)
             .height(Length::Fill)
             .into()
