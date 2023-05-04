@@ -1,3 +1,4 @@
+use crate::style::palette::Palette;
 use crate::{Ellipse, Ticks};
 use iced::widget::canvas::path::arc::Elliptical;
 use iced::widget::canvas::path::Builder;
@@ -24,7 +25,6 @@ pub struct Gauge {
     min: f32,
     max: f32,
     step: f32,
-    bg_color: Color,
     border_color: Color,
     closure: Closure,
 }
@@ -63,7 +63,6 @@ impl Gauge {
             min,
             max,
             step,
-            bg_color: Color::from_rgb8(0x12, 0x93, 0xD8),
             border_color: Color::BLACK,
             closure,
         }
@@ -85,7 +84,7 @@ impl<T> Program<T> for Gauge {
     fn draw(
         &self,
         _state: &Self::State,
-        _theme: &Theme,
+        theme: &Theme,
         bounds: Rectangle,
         _cursor: Cursor,
     ) -> Vec<Geometry> {
@@ -132,7 +131,7 @@ impl<T> Program<T> for Gauge {
                 }
             };
 
-            frame.fill(&background, self.bg_color);
+            frame.fill(&background, Palette::new(theme).background);
             frame.stroke(&background, thin_stroke(self.border_color));
         });
 

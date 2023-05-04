@@ -133,6 +133,10 @@ impl Application for Dashboard {
             .into()
     }
 
+    fn theme(&self) -> Self::Theme {
+        Theme::Light
+    }
+
     fn subscription(&self) -> Subscription<Self::Message> {
         use State::*;
 
