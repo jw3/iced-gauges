@@ -76,6 +76,13 @@ impl Gauge {
         self.value = v;
         self.needle_gfx.clear();
     }
+
+    pub fn repaint(&self) {
+        self.needle_gfx.clear();
+        self.bg_gfx.clear();
+        self.ticks_gfx.clear();
+        self.pin_gfx.clear();
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
