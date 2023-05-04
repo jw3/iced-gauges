@@ -16,6 +16,7 @@ pub struct Gauge {
     value: f32,
     needle_gfx: Cache,
     bg_gfx: Cache,
+    border_gfx: Cache,
     ticks_gfx: Cache,
     pin_gfx: Cache,
     length: f32,
@@ -25,7 +26,6 @@ pub struct Gauge {
     min: f32,
     max: f32,
     step: f32,
-    border_color: Color,
     closure: Closure,
 }
 
@@ -54,6 +54,7 @@ impl Gauge {
             value: 0.0,
             needle_gfx: Default::default(),
             bg_gfx: Default::default(),
+            border_gfx: Default::default(),
             ticks_gfx: Default::default(),
             pin_gfx: Default::default(),
             length,
@@ -63,7 +64,6 @@ impl Gauge {
             min,
             max,
             step,
-            border_color: Color::BLACK,
             closure,
         }
     }
@@ -82,21 +82,30 @@ impl Gauge {
         self.bg_gfx.clear();
         self.ticks_gfx.clear();
         self.pin_gfx.clear();
+        self.border_gfx.clear();
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Style {
     pub background: Color,
+    pub border: Color,
 }
 
 impl Style {
     pub const LIGHT: Style = Style {
         background: Color::from_rgb(18.0 / 255.0, 147.0 / 255.0, 216.0 / 255.0),
+        border: Color::BLACK,
     };
 
     pub const DARK: Style = Style {
         background: Color::from_rgb(48.0 / 255.0, 71.0 as f32 / 255.0, 94.0 as f32 / 255.0),
+        border: Color {
+            r: 246.0 / 255.0,
+            g: 88.0 / 255.0,
+            b: 7.0 / 255.0,
+            a: 1.0,
+        },
     };
 }
 
@@ -114,6 +123,7 @@ impl From<&Extended> for Style {
     fn from(x: &Extended) -> Self {
         Self {
             background: x.background.base.color,
+            border: x.secondary.weak.color,
         }
     }
 }
@@ -131,9 +141,46 @@ impl<T> Program<T> for Gauge {
         let bg = self.bg_gfx.draw(bounds.size(), |frame| {
             let center = frame.center();
             let radius = frame.width().min(frame.height()) / 2.5;
-            let width = radius / 100.0;
 
-            let thin_stroke = |color: Color| -> Stroke {
+            let background = match self.closure {
+                Closure::None => Path::circle(center, radius),
+                Closure::Sector => {
+                    let mut builder = Builder::new();
+                    builder.ellipse(Elliptical {
+                        center,
+                        radii: Vector::new(radius, radius),
+                        rotation: self.rotate,
+                        start_angle: 0.0,
+                        end_angle: self.length,
+                    });
+                    builder.line_to(center);
+                    builder.close();
+                    builder.build()
+                }
+                Closure::Segment => {
+                    let mut builder = Builder::new();
+                    builder.ellipse(Elliptical {
+                        center,
+                        radii: Vector::new(radius, radius),
+                        rotation: self.rotate,
+                        start_angle: 0.0,
+                        end_angle: self.length,
+                    });
+                    builder.close();
+                    builder.build()
+                }
+            };
+
+            let style = Style::from(theme);
+            frame.fill(&background, style.background);
+        });
+
+        let border = self.border_gfx.draw(bounds.size(), |frame| {
+            let center = frame.center();
+            let radius = frame.width().min(frame.height()) / 2.5;
+            let width = radius / 50.0;
+
+            let stroke = |color: Color| -> Stroke {
                 Stroke {
                     width,
                     style: stroke::Style::Solid(color),
@@ -171,8 +218,8 @@ impl<T> Program<T> for Gauge {
                 }
             };
 
-            frame.fill(&background, Style::from(theme).background);
-            frame.stroke(&background, thin_stroke(self.border_color));
+            let style = Style::from(theme);
+            frame.stroke(&background, stroke(style.border));
         });
 
         let needle = self.needle_gfx.draw(bounds.size(), |frame| {
@@ -273,6 +320,6 @@ impl<T> Program<T> for Gauge {
             frame.fill(&dot, Color::BLACK);
         });
 
-        vec![bg, ticks, pin, needle]
+        vec![bg, ticks, border, pin, needle]
     }
 }
