@@ -1,9 +1,9 @@
 //! Iced Gauges
-pub use ellipse::Ellipse;
+pub use crate::util::Ellipse;
 
-mod ellipse;
 pub mod round;
 pub mod style;
+mod util;
 
 #[derive(Copy, Clone)]
 pub struct Ticks {
