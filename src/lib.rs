@@ -2,7 +2,6 @@
 pub use crate::util::Ellipse;
 
 pub mod round;
-pub mod style;
 mod util;
 
 #[derive(Copy, Clone)]

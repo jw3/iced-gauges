@@ -1,5 +1,5 @@
-use crate::style::palette::Palette;
 use crate::{Ellipse, Ticks};
+use iced::theme::palette::Extended;
 use iced::widget::canvas::path::arc::Elliptical;
 use iced::widget::canvas::path::Builder;
 use iced::widget::canvas::{stroke, Cache, Cursor, Geometry, LineCap, Path, Program, Stroke};
@@ -78,6 +78,39 @@ impl Gauge {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Style {
+    pub background: Color,
+}
+
+impl Style {
+    pub const LIGHT: Style = Style {
+        background: Color::from_rgb(18.0 / 255.0, 147.0 / 255.0, 216.0 / 255.0),
+    };
+
+    pub const DARK: Style = Style {
+        background: Color::from_rgb(48.0 / 255.0, 71.0 as f32 / 255.0, 94.0 as f32 / 255.0),
+    };
+}
+
+impl From<&Theme> for Style {
+    fn from(value: &Theme) -> Self {
+        match value {
+            Theme::Light => Style::LIGHT,
+            Theme::Dark => Style::DARK,
+            Theme::Custom(_) => Style::from(value.extended_palette()),
+        }
+    }
+}
+
+impl From<&Extended> for Style {
+    fn from(x: &Extended) -> Self {
+        Self {
+            background: x.background.base.color,
+        }
+    }
+}
+
 impl<T> Program<T> for Gauge {
     type State = ();
 
@@ -131,7 +164,7 @@ impl<T> Program<T> for Gauge {
                 }
             };
 
-            frame.fill(&background, Palette::new(theme).background);
+            frame.fill(&background, Style::from(theme).background);
             frame.stroke(&background, thin_stroke(self.border_color));
         });
 
