@@ -1,6 +1,6 @@
 use iced::widget::{canvas, container, toggler, Column, Row};
-use iced::Settings;
 use iced::{executor, Application, Command, Element, Length, Renderer, Subscription, Theme};
+use iced::{Color, Settings};
 use std::time::Duration;
 
 use crate::Msg::Update;
@@ -40,37 +40,34 @@ impl Application for Dashboard {
     type Flags = ();
 
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
-        let maj = Ticks {
-            first: 0.0,
-            every: 5.0,
-        };
-        let min = Ticks {
-            first: 0.0,
-            every: 1.0,
-        };
+        let ticks = vec![
+            Ticks {
+                first: 0.0,
+                every: 1.0,
+                color: Color::WHITE,
+                length: 0.10,
+                label: false,
+            },
+            Ticks {
+                first: 0.0,
+                every: 5.0,
+                color: Color::BLACK,
+                length: 0.30,
+                label: true,
+            },
+        ];
         (
             Dashboard {
                 gauge: vec![
-                    Gauge::new(0.0, 85.0, 0.35, 0.40, Closure::None, maj, min),
-                    Gauge::new(0.0, 85.0, 0.90, 0.30, Closure::Segment, maj, min),
-                    Gauge::new(0.0, 85.0, 0.90, 0.30, Closure::Segment, maj, min),
-                    Gauge::new(0.0, 85.0, 0.35, 0.90, Closure::None, maj, min),
-                    Gauge::new(0.0, 85.0, 0.35, 0.40, Closure::Sector, maj, min),
-                    Gauge::new(0.0, 85.0, 0.35, 0.90, Closure::None, maj, min),
-                    Gauge::new(0.0, 85.0, 0.75, 0.0, Closure::None, maj, min),
-                    Gauge::new(
-                        0.0,
-                        42.5,
-                        1.0,
-                        0.75,
-                        Closure::None,
-                        Ticks {
-                            first: 0.0,
-                            every: 2.5,
-                        },
-                        min,
-                    ),
-                    Gauge::new(0.0, 85.0, 0.50, 0.30, Closure::Sector, maj, min),
+                    Gauge::new(0.0, 85.0, 0.90, 0.30, Closure::Segment, &ticks),
+                    Gauge::new(0.0, 85.0, 0.90, 0.30, Closure::Segment, &ticks),
+                    Gauge::new(0.0, 85.0, 0.90, 0.30, Closure::Segment, &ticks),
+                    Gauge::new(0.0, 85.0, 0.35, 0.90, Closure::None, &ticks),
+                    Gauge::new(0.0, 85.0, 0.35, 0.40, Closure::Sector, &ticks),
+                    Gauge::new(0.0, 85.0, 0.35, 0.90, Closure::None, &ticks),
+                    Gauge::new(0.0, 85.0, 0.75, 0.0, Closure::None, &ticks),
+                    Gauge::new(0.0, 42.5, 1.0, 0.75, Closure::None, &ticks),
+                    Gauge::new(0.0, 85.0, 0.50, 0.30, Closure::Sector, &ticks),
                 ],
                 state: State::Accel(0.0),
                 dark_mode: false,

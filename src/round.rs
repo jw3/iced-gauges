@@ -21,12 +21,11 @@ pub struct Gauge {
     pin_gfx: Cache,
     length: f32,
     rotate: f32,
-    major_ticks: Ticks,
-    minor_ticks: Ticks,
     min: f32,
     max: f32,
     step: f32,
     closure: Closure,
+    ticks: Vec<Ticks>,
 }
 
 impl Gauge {
@@ -38,8 +37,7 @@ impl Gauge {
         length: f32,
         rotate: f32,
         closure: Closure,
-        major_ticks: Ticks,
-        minor_ticks: Ticks,
+        ticks: &Vec<Ticks>,
     ) -> Self {
         // wait for builder impl
         let res = 1.0; // resolution: ie. visible values
@@ -59,12 +57,11 @@ impl Gauge {
             pin_gfx: Default::default(),
             length,
             rotate,
-            major_ticks,
-            minor_ticks,
             min,
             max,
             step,
             closure,
+            ticks: ticks.clone(),
         }
     }
 
@@ -271,45 +268,47 @@ impl<T> Program<T> for Gauge {
                 frame.rotate(self.rotate);
 
                 let outer = Ellipse::round(radius);
-                let major = Ellipse::round(radius - 30.0);
-                let minor = Ellipse::round(radius - 10.0);
+                for tick in &self.ticks {
+                    let inner = Ellipse::round(radius - radius * tick.length);
+                    let mut i = tick.first;
+                    loop {
+                        let angle = self.step * i;
+                        let p1 = inner.get_point(angle);
+                        let p2 = outer.get_point(angle);
 
-                let mut i = self.minor_ticks.first;
-                loop {
-                    let angle = self.step * i;
-                    let p1 = minor.get_point(angle);
-                    let p2 = outer.get_point(angle);
+                        let path = Path::line(p1, p2);
+                        frame.with_save(|frame| {
+                            frame.stroke(&path, stroke(width * 0.8, tick.color));
+                            frame.translate(Vector::new(p1.x, p1.y));
+                            if tick.label {
+                                frame.fill_text(format!("{i}"));
+                            }
+                        });
 
-                    let tick = Path::line(p1, p2);
-                    frame.with_save(|frame| {
-                        frame.stroke(&tick, stroke(width * 0.8, Color::WHITE));
-                        frame.translate(Vector::new(p1.x, p1.y));
-                    });
-
-                    i += self.minor_ticks.every;
-                    if i * self.step >= self.length {
-                        break;
+                        if i * self.step >= self.length {
+                            break;
+                        }
+                        i += tick.every;
                     }
                 }
-
-                let mut i = self.major_ticks.first;
-                loop {
-                    let angle = self.step * i;
-                    let p1 = major.get_point(angle);
-                    let p2 = outer.get_point(angle);
-
-                    let tick = Path::line(p1, p2);
-                    frame.with_save(|frame| {
-                        frame.stroke(&tick, stroke(width * 1.5, Color::BLACK));
-                        frame.translate(Vector::new(p1.x, p1.y));
-                        frame.fill_text(format!("{i}"));
-                    });
-
-                    if i * self.step >= self.length {
-                        break;
-                    }
-                    i += self.major_ticks.every;
-                }
+                // let mut i = self.major_ticks.first;
+                // loop {
+                //     let angle = self.step * i;
+                //     let p1 = major.get_point(angle);
+                //     let p2 = outer.get_point(angle);
+                //
+                //     let tick = Path::line(p1, p2);
+                //     frame.with_save(|frame| {
+                //         frame.stroke(&tick, stroke(width * 1.5, Color::BLACK));
+                //         frame.translate(Vector::new(p1.x, p1.y));
+                //         frame.fill_text(format!("{i}"));
+                //     });
+                //
+                //     if i * self.step >= self.length {
+                //         break;
+                //     }
+                //     i += self.major_ticks.every;
+                // }
             });
         });
 
