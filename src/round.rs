@@ -81,6 +81,46 @@ impl Gauge {
         self.pin_gfx.clear();
         self.border_gfx.clear();
     }
+
+    fn bg_path(&self, center: Point, radius: f32) -> Path {
+        match self.closure {
+            Closure::None => Path::circle(center, radius),
+            Closure::Sector => {
+                let mut builder = Builder::new();
+                builder.ellipse(Elliptical {
+                    center,
+                    radii: Vector::new(radius, radius),
+                    rotation: self.rotate,
+                    start_angle: 0.0,
+                    end_angle: self.length,
+                });
+                builder.line_to(center);
+                builder.close();
+                builder.build()
+            }
+            Closure::Segment => {
+                let mut builder = Builder::new();
+                builder.ellipse(Elliptical {
+                    center,
+                    radii: Vector::new(radius, radius),
+                    rotation: self.rotate,
+                    start_angle: 0.0,
+                    end_angle: self.length,
+                });
+                builder.close();
+                builder.build()
+            }
+        }
+    }
+
+    fn stroke<'a>(&self, width: f32, color: Color) -> Stroke<'a> {
+        Stroke {
+            width,
+            style: stroke::Style::Solid(color),
+            line_cap: LineCap::Round,
+            ..Stroke::default()
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -125,7 +165,7 @@ impl From<&Extended> for Style {
     }
 }
 
-impl<T> Program<T> for Gauge {
+impl<M> Program<M> for Gauge {
     type State = ();
 
     fn draw(
@@ -139,35 +179,7 @@ impl<T> Program<T> for Gauge {
             let center = frame.center();
             let radius = frame.width().min(frame.height()) / 2.5;
 
-            let background = match self.closure {
-                Closure::None => Path::circle(center, radius),
-                Closure::Sector => {
-                    let mut builder = Builder::new();
-                    builder.ellipse(Elliptical {
-                        center,
-                        radii: Vector::new(radius, radius),
-                        rotation: self.rotate,
-                        start_angle: 0.0,
-                        end_angle: self.length,
-                    });
-                    builder.line_to(center);
-                    builder.close();
-                    builder.build()
-                }
-                Closure::Segment => {
-                    let mut builder = Builder::new();
-                    builder.ellipse(Elliptical {
-                        center,
-                        radii: Vector::new(radius, radius),
-                        rotation: self.rotate,
-                        start_angle: 0.0,
-                        end_angle: self.length,
-                    });
-                    builder.close();
-                    builder.build()
-                }
-            };
-
+            let background = self.bg_path(center, radius);
             let style = Style::from(theme);
             frame.fill(&background, style.background);
         });
@@ -177,46 +189,9 @@ impl<T> Program<T> for Gauge {
             let radius = frame.width().min(frame.height()) / 2.5;
             let width = radius / 50.0;
 
-            let stroke = |color: Color| -> Stroke {
-                Stroke {
-                    width,
-                    style: stroke::Style::Solid(color),
-                    line_cap: LineCap::Round,
-                    ..Stroke::default()
-                }
-            };
-
-            let background = match self.closure {
-                Closure::None => Path::circle(center, radius),
-                Closure::Sector => {
-                    let mut builder = Builder::new();
-                    builder.ellipse(Elliptical {
-                        center,
-                        radii: Vector::new(radius, radius),
-                        rotation: self.rotate,
-                        start_angle: 0.0,
-                        end_angle: self.length,
-                    });
-                    builder.line_to(center);
-                    builder.close();
-                    builder.build()
-                }
-                Closure::Segment => {
-                    let mut builder = Builder::new();
-                    builder.ellipse(Elliptical {
-                        center,
-                        radii: Vector::new(radius, radius),
-                        rotation: self.rotate,
-                        start_angle: 0.0,
-                        end_angle: self.length,
-                    });
-                    builder.close();
-                    builder.build()
-                }
-            };
-
+            let background = self.bg_path(center, radius);
             let style = Style::from(theme);
-            frame.stroke(&background, stroke(style.border));
+            frame.stroke(&background, self.stroke(width, style.border));
         });
 
         let needle = self.needle_gfx.draw(bounds.size(), |frame| {
@@ -224,14 +199,6 @@ impl<T> Program<T> for Gauge {
             let radius = frame.width().min(frame.height()) / 2.5;
 
             let width = radius / 100.0;
-            let thin_stroke = |color: Color| -> Stroke {
-                Stroke {
-                    width,
-                    style: stroke::Style::Solid(color),
-                    line_cap: LineCap::Round,
-                    ..Stroke::default()
-                }
-            };
 
             frame.with_save(|frame| {
                 frame.translate(Vector::new(center.x, center.y));
@@ -241,7 +208,7 @@ impl<T> Program<T> for Gauge {
                 frame.rotate(self.rotate);
 
                 frame.rotate(self.value as f32 * self.step);
-                frame.stroke(&short_hand, thin_stroke(Color::BLACK));
+                frame.stroke(&short_hand, self.stroke(width, Color::BLACK));
 
                 frame.translate(Vector::new(tip.x, tip.y));
                 frame.fill_text(format!("{}", self.value));
@@ -252,15 +219,6 @@ impl<T> Program<T> for Gauge {
             let center = frame.center();
             let radius = frame.width().min(frame.height()) / 2.5;
             let width = radius / 100.0;
-
-            let stroke = |w: f32, color: Color| -> Stroke {
-                Stroke {
-                    width: w,
-                    style: stroke::Style::Solid(color),
-                    line_cap: LineCap::Square,
-                    ..Stroke::default()
-                }
-            };
 
             frame.with_save(|frame| {
                 frame.translate(Vector::new(center.x, center.y));
@@ -278,7 +236,7 @@ impl<T> Program<T> for Gauge {
 
                         let path = Path::line(p1, p2);
                         frame.with_save(|frame| {
-                            frame.stroke(&path, stroke(width * 0.8, tick.color));
+                            frame.stroke(&path, self.stroke(width * 0.8, tick.color));
                             frame.translate(Vector::new(p1.x, p1.y));
                             if tick.label {
                                 frame.fill_text(format!("{i}"));
@@ -291,24 +249,6 @@ impl<T> Program<T> for Gauge {
                         i += tick.every;
                     }
                 }
-                // let mut i = self.major_ticks.first;
-                // loop {
-                //     let angle = self.step * i;
-                //     let p1 = major.get_point(angle);
-                //     let p2 = outer.get_point(angle);
-                //
-                //     let tick = Path::line(p1, p2);
-                //     frame.with_save(|frame| {
-                //         frame.stroke(&tick, stroke(width * 1.5, Color::BLACK));
-                //         frame.translate(Vector::new(p1.x, p1.y));
-                //         frame.fill_text(format!("{i}"));
-                //     });
-                //
-                //     if i * self.step >= self.length {
-                //         break;
-                //     }
-                //     i += self.major_ticks.every;
-                // }
             });
         });
 
