@@ -3,7 +3,9 @@ use crate::{Ellipse, Tick};
 use iced::theme::palette::Extended;
 use iced::widget::canvas::path::arc::Elliptical;
 use iced::widget::canvas::path::Builder;
-use iced::widget::canvas::{stroke, Cache, Cursor, Geometry, LineCap, Path, Program, Stroke};
+use iced::widget::canvas::{
+    stroke, Cache, Cursor, Frame, Geometry, LineCap, Path, Program, Stroke,
+};
 use iced::{Color, Point, Rectangle, Theme, Vector};
 use std::f32::consts::TAU;
 
@@ -180,7 +182,7 @@ impl<M> Program<M> for Gauge {
     ) -> Vec<Geometry> {
         let bg = self.bg_gfx.draw(bounds.size(), |frame| {
             let center = frame.center();
-            let radius = frame.width().min(frame.height()) / 2.5;
+            let radius = radius_for_frame(frame);
 
             let background = self.bg_path(center, radius);
             let style = Style::from(theme);
@@ -189,7 +191,7 @@ impl<M> Program<M> for Gauge {
 
         let border = self.border_gfx.draw(bounds.size(), |frame| {
             let center = frame.center();
-            let radius = frame.width().min(frame.height()) / 2.5;
+            let radius = radius_for_frame(frame);
             let width = radius / 50.0;
 
             let background = self.bg_path(center, radius);
@@ -199,7 +201,7 @@ impl<M> Program<M> for Gauge {
 
         let needle = self.needle_gfx.draw(bounds.size(), |frame| {
             let center = frame.center();
-            let radius = frame.width().min(frame.height()) / 2.5;
+            let radius = radius_for_frame(frame);
 
             frame.with_save(|frame| {
                 frame.translate(Vector::new(center.x, center.y));
@@ -211,7 +213,7 @@ impl<M> Program<M> for Gauge {
 
         let ticks = self.ticks_gfx.draw(bounds.size(), |frame| {
             let center = frame.center();
-            let radius = frame.width().min(frame.height()) / 2.5;
+            let radius = radius_for_frame(frame);
             let width = radius / 100.0;
 
             frame.with_save(|frame| {
@@ -248,11 +250,14 @@ impl<M> Program<M> for Gauge {
 
         let pin = self.pin_gfx.draw(bounds.size(), |frame| {
             let center = frame.center();
-            let radius = frame.width().min(frame.height()) / 2.5;
-            let dot = Path::circle(center, radius / 25.0);
+            let dot = Path::circle(center, radius_for_frame(frame) / 25.0);
             frame.fill(&dot, Color::BLACK);
         });
 
         vec![bg, ticks, border, pin, needle]
     }
+}
+
+fn radius_for_frame(frame: &Frame) -> f32 {
+    frame.width().min(frame.height()) / 2.5
 }
