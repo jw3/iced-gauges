@@ -6,7 +6,7 @@ use std::time::Duration;
 use crate::Msg::Update;
 use iced::time;
 use iced_gauges::custom::{Closing, Gauge};
-use iced_gauges::Ticks;
+use iced_gauges::Tick;
 
 fn main() -> iced::Result {
     Dashboard::run(Settings {
@@ -41,14 +41,14 @@ impl Application for Dashboard {
 
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
         let ticks = vec![
-            Ticks {
+            Tick {
                 first: 0.0,
                 every: 1.0,
                 color: Color::WHITE,
                 length: 0.10,
                 label: false,
             },
-            Ticks {
+            Tick {
                 first: 0.0,
                 every: 5.0,
                 color: Color::BLACK,

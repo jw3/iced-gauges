@@ -1,5 +1,5 @@
 use crate::needle::{Needle, Needles};
-use crate::{Ellipse, Ticks};
+use crate::{Ellipse, Tick};
 use iced::theme::palette::Extended;
 use iced::widget::canvas::path::arc::Elliptical;
 use iced::widget::canvas::path::Builder;
@@ -26,7 +26,7 @@ pub struct Gauge {
     max: f32,
     step: f32,
     closing: Closing,
-    ticks: Vec<Ticks>,
+    ticks: Vec<Tick>,
     needle: Box<dyn Needle>,
 }
 
@@ -39,7 +39,7 @@ impl Gauge {
         length: f32,
         rotate: f32,
         closing: Closing,
-        ticks: &Vec<Ticks>,
+        ticks: &Vec<Tick>,
     ) -> Self {
         // wait for builder impl
         let res = 1.0; // resolution: ie. visible values
