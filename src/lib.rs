@@ -1,7 +1,9 @@
 //! Iced Gauges
-pub use crate::util::Ellipse;
 use iced::Color;
 
+pub use crate::util::Ellipse;
+
+pub mod needle;
 pub mod round;
 mod util;
 

@@ -1,3 +1,4 @@
+use crate::needle::{Needle, Needles};
 use crate::{Ellipse, Ticks};
 use iced::theme::palette::Extended;
 use iced::widget::canvas::path::arc::Elliptical;
@@ -26,6 +27,7 @@ pub struct Gauge {
     step: f32,
     closure: Closure,
     ticks: Vec<Ticks>,
+    needle: Box<dyn Needle>,
 }
 
 impl Gauge {
@@ -62,6 +64,7 @@ impl Gauge {
             step,
             closure,
             ticks: ticks.clone(),
+            needle: Box::new(Needles::Diamond),
         }
     }
 
@@ -198,20 +201,11 @@ impl<M> Program<M> for Gauge {
             let center = frame.center();
             let radius = frame.width().min(frame.height()) / 2.5;
 
-            let width = radius / 100.0;
-
             frame.with_save(|frame| {
                 frame.translate(Vector::new(center.x, center.y));
-
-                let tip = Point::new(0.5 * radius, 0.0);
-                let short_hand = Path::line(Point::ORIGIN, tip);
                 frame.rotate(self.rotate);
-
                 frame.rotate(self.value as f32 * self.step);
-                frame.stroke(&short_hand, self.stroke(width, Color::BLACK));
-
-                frame.translate(Vector::new(tip.x, tip.y));
-                frame.fill_text(format!("{}", self.value));
+                self.needle.draw(radius, self.value, frame);
             });
         });
 
