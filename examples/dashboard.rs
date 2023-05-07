@@ -5,7 +5,7 @@ use std::time::Duration;
 
 use crate::Msg::Update;
 use iced::time;
-use iced_gauges::round::{Closing, Gauge};
+use iced_gauges::custom::{Closing, Gauge};
 use iced_gauges::Ticks;
 
 fn main() -> iced::Result {
