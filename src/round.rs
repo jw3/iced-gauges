@@ -7,7 +7,7 @@ use iced::widget::canvas::{stroke, Cache, Cursor, Geometry, LineCap, Path, Progr
 use iced::{Color, Point, Rectangle, Theme, Vector};
 use std::f32::consts::TAU;
 
-pub enum Closure {
+pub enum Closing {
     None,
     Segment,
     Sector,
@@ -25,7 +25,7 @@ pub struct Gauge {
     min: f32,
     max: f32,
     step: f32,
-    closure: Closure,
+    closing: Closing,
     ticks: Vec<Ticks>,
     needle: Box<dyn Needle>,
 }
@@ -38,7 +38,7 @@ impl Gauge {
         max: f32,
         length: f32,
         rotate: f32,
-        closure: Closure,
+        closing: Closing,
         ticks: &Vec<Ticks>,
     ) -> Self {
         // wait for builder impl
@@ -62,7 +62,7 @@ impl Gauge {
             min,
             max,
             step,
-            closure,
+            closing,
             ticks: ticks.clone(),
             needle: Box::new(Needles::Diamond),
         }
@@ -86,9 +86,9 @@ impl Gauge {
     }
 
     fn bg_path(&self, center: Point, radius: f32) -> Path {
-        match self.closure {
-            Closure::None => Path::circle(center, radius),
-            Closure::Sector => {
+        match self.closing {
+            Closing::None => Path::circle(center, radius),
+            Closing::Sector => {
                 let mut builder = Builder::new();
                 builder.ellipse(Elliptical {
                     center,
@@ -101,7 +101,7 @@ impl Gauge {
                 builder.close();
                 builder.build()
             }
-            Closure::Segment => {
+            Closing::Segment => {
                 let mut builder = Builder::new();
                 builder.ellipse(Elliptical {
                     center,

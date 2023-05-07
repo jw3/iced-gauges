@@ -5,7 +5,7 @@ use std::time::Duration;
 
 use crate::Msg::Update;
 use iced::time;
-use iced_gauges::round::{Closure, Gauge};
+use iced_gauges::round::{Closing, Gauge};
 use iced_gauges::Ticks;
 
 fn main() -> iced::Result {
@@ -59,15 +59,15 @@ impl Application for Dashboard {
         (
             Dashboard {
                 gauge: vec![
-                    Gauge::new(0.0, 85.0, 0.90, 0.30, Closure::Segment, &ticks),
-                    Gauge::new(0.0, 85.0, 0.90, 0.30, Closure::Segment, &ticks),
-                    Gauge::new(0.0, 85.0, 0.90, 0.30, Closure::Segment, &ticks),
-                    Gauge::new(0.0, 85.0, 0.35, 0.90, Closure::None, &ticks),
-                    Gauge::new(0.0, 85.0, 0.35, 0.40, Closure::Sector, &ticks),
-                    Gauge::new(0.0, 85.0, 0.35, 0.90, Closure::None, &ticks),
-                    Gauge::new(0.0, 85.0, 0.75, 0.0, Closure::None, &ticks),
-                    Gauge::new(0.0, 42.5, 1.0, 0.75, Closure::None, &ticks),
-                    Gauge::new(0.0, 85.0, 0.50, 0.30, Closure::Sector, &ticks),
+                    Gauge::new(0.0, 85.0, 0.90, 0.30, Closing::Segment, &ticks),
+                    Gauge::new(0.0, 85.0, 0.90, 0.30, Closing::Segment, &ticks),
+                    Gauge::new(0.0, 85.0, 0.90, 0.30, Closing::Segment, &ticks),
+                    Gauge::new(0.0, 85.0, 0.35, 0.90, Closing::None, &ticks),
+                    Gauge::new(0.0, 85.0, 0.35, 0.40, Closing::Sector, &ticks),
+                    Gauge::new(0.0, 85.0, 0.35, 0.90, Closing::None, &ticks),
+                    Gauge::new(0.0, 85.0, 0.75, 0.0, Closing::None, &ticks),
+                    Gauge::new(0.0, 42.5, 1.0, 0.75, Closing::None, &ticks),
+                    Gauge::new(0.0, 85.0, 0.50, 0.30, Closing::Sector, &ticks),
                 ],
                 state: State::Accel(0.0),
                 dark_mode: false,
