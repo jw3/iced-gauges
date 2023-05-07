@@ -10,7 +10,7 @@ use iced_gauges::Ticks;
 
 fn main() -> iced::Result {
     Dashboard::run(Settings {
-        antialiasing: false,
+        antialiasing: true,
         ..Settings::default()
     })
 }

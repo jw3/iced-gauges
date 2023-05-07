@@ -14,7 +14,7 @@ readme = "README.md"
 # rust-version = ""
 
 [dev-dependencies]
-iced = { version = "0.9", features = ["tokio"] }
+iced = { version = "0.9", features = ["tokio", "glow"] }
 time = { version = "0.3", features = ["local-offset"] }
 
 [dependencies]
