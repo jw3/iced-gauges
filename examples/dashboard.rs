@@ -47,6 +47,8 @@ impl Application for Dashboard {
                 color: Color::WHITE,
                 length: 0.10,
                 label: false,
+                width: 2.0,
+                skip: Some(5),
             },
             Tick {
                 first: 0.0,
@@ -54,6 +56,8 @@ impl Application for Dashboard {
                 color: Color::BLACK,
                 length: 0.30,
                 label: true,
+                width: 1.0,
+                skip: None,
             },
         ];
         (

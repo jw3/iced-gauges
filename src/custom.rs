@@ -225,24 +225,28 @@ impl<M> Program<M> for Gauge {
                 for tick in &self.ticks {
                     let inner = Ellipse::round(radius - radius * tick.length);
                     let mut i = tick.first;
+                    let mut ii = 0usize;
                     loop {
-                        let angle = self.step * i;
-                        let p1 = inner.get_point(angle);
-                        let p2 = outer.get_point(angle);
+                        if tick.skip.map_or(true, |skip| ii % skip != 0) {
+                            let angle = self.step * i;
+                            let p1 = inner.get_point(angle);
+                            let p2 = outer.get_point(angle);
 
-                        let path = Path::line(p1, p2);
-                        frame.with_save(|frame| {
-                            frame.stroke(&path, self.stroke(width * 0.8, tick.color));
-                            frame.translate(Vector::new(p1.x, p1.y));
-                            if tick.label {
-                                frame.fill_text(format!("{i}"));
-                            }
-                        });
+                            let path = Path::line(p1, p2);
+                            frame.with_save(|frame| {
+                                frame.stroke(&path, self.stroke(width * tick.width, tick.color));
+                                frame.translate(Vector::new(p1.x, p1.y));
+                                if tick.label {
+                                    frame.fill_text(format!("{i}"));
+                                }
+                            });
+                        }
 
                         if i * self.step >= self.length {
                             break;
                         }
                         i += tick.every;
+                        ii += 1;
                     }
                 }
             });
