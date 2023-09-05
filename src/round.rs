@@ -1,4 +1,5 @@
 use crate::needle::{Needle, Needles};
+use crate::pin::{Pin, Pins};
 use crate::{Ellipse, Tick};
 use iced::theme::palette::Extended;
 use iced::widget::canvas::path::arc::Elliptical;
@@ -29,7 +30,8 @@ pub struct Gauge {
     step: f32,
     closing: Closing,
     ticks: Vec<Tick>,
-    needle: Box<dyn Needle>,
+    pub needle: Box<dyn Needle>,
+    pub pin: Box<dyn Pin>,
 }
 
 impl Gauge {
@@ -67,6 +69,7 @@ impl Gauge {
             closing,
             ticks: ticks.clone(),
             needle: Box::new(Needles::Diamond),
+            pin: Box::new(Pins::Small),
         }
     }
 
@@ -253,12 +256,10 @@ impl<M> Program<M> for Gauge {
         });
 
         let pin = self.pin_gfx.draw(bounds.size(), |frame| {
-            let center = frame.center();
-            let dot = Path::circle(center, radius_for_frame(frame) / 25.0);
-            frame.fill(&dot, Color::BLACK);
+            self.pin.draw(radius_for_frame(frame), frame);
         });
 
-        vec![bg, ticks, border, pin, needle]
+        vec![bg, ticks, border, needle, pin]
     }
 }
 
