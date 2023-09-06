@@ -26,15 +26,26 @@ impl Application for Dashboard {
     type Flags = ();
 
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
-        let ticks = vec![Tick {
-            first: 0.0,
-            every: 25.0,
-            color: Color::WHITE,
-            length: 0.10,
-            label: true,
-            width: 2.0,
-            skip: None,
-        }];
+        let ticks = vec![
+            Tick {
+                first: 0.0,
+                every: 25.0,
+                color: Color::WHITE,
+                size: 0.10,
+                label: true,
+                width: 2.0,
+                skip: None,
+            },
+            Tick {
+                first: 0.0,
+                every: 25.0,
+                color: Color::WHITE,
+                size: 0.10,
+                label: true,
+                width: 2.0,
+                skip: None,
+            },
+        ];
         let mut gauge = Gauge::new(0.0, 100.0, 0.30, 0.60, Closing::None, &ticks);
         gauge.pin = Box::new(Pins::Large);
 

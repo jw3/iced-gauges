@@ -226,7 +226,7 @@ impl<M> Program<M> for Gauge {
 
                 let outer = Ellipse::round(radius);
                 for tick in &self.ticks {
-                    let inner = Ellipse::round(radius - radius * tick.length);
+                    let inner = Ellipse::round(radius - radius * tick.size);
                     let mut i = tick.first;
                     let mut ii = 0usize;
                     loop {
