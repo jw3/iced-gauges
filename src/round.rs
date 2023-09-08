@@ -226,11 +226,11 @@ impl<M> Program<M> for Gauge {
 
                 let outer = Ellipse::round(radius);
                 for tick in &self.ticks {
-                    let inner = Ellipse::round(radius - radius * tick.size);
+                    let inner = Ellipse::round(radius - radius * tick.length);
+                    let mut current_step = 0usize;
                     let mut i = tick.first;
-                    let mut ii = 0usize;
                     loop {
-                        if tick.skip.map_or(true, |skip| ii % skip != 0) {
+                        if tick.skip.map_or(true, |skip| current_step % skip != 0) {
                             let angle = self.step * i;
                             let p1 = inner.get_point(angle);
                             let p2 = outer.get_point(angle);
@@ -248,8 +248,15 @@ impl<M> Program<M> for Gauge {
                         if i * self.step >= self.length {
                             break;
                         }
-                        i += tick.every;
-                        ii += 1;
+
+                        if let Some(max) = tick.steps {
+                            if max <= current_step {
+                                break;
+                            }
+                        }
+
+                        i += tick.step;
+                        current_step += 1;
                     }
                 }
             });

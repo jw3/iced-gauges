@@ -43,21 +43,23 @@ impl Application for Dashboard {
         let ticks = vec![
             Tick {
                 first: 0.0,
-                every: 1.0,
+                step: 1.0,
                 color: Color::WHITE,
-                size: 0.10,
+                length: 0.10,
                 label: false,
                 width: 2.0,
                 skip: Some(5),
+                steps: None,
             },
             Tick {
                 first: 0.0,
-                every: 5.0,
+                step: 5.0,
                 color: Color::BLACK,
-                size: 0.30,
+                length: 0.30,
                 label: true,
                 width: 1.0,
                 skip: None,
+                steps: None,
             },
         ];
         (

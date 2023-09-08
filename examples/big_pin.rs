@@ -1,9 +1,6 @@
-use iced::widget::{canvas, container, toggler, Column, Row};
-use iced::{executor, Application, Command, Element, Length, Renderer, Subscription, Theme};
+use iced::widget::{canvas, container, Row};
+use iced::{executor, Application, Command, Element, Length, Renderer, Theme};
 use iced::{Color, Settings};
-use std::time::Duration;
-
-use iced::time;
 use iced_gauges::pin::Pins;
 use iced_gauges::round::{Closing, Gauge};
 use iced_gauges::Tick;
@@ -29,21 +26,33 @@ impl Application for Dashboard {
         let ticks = vec![
             Tick {
                 first: 0.0,
-                every: 25.0,
-                color: Color::WHITE,
-                size: 0.10,
+                step: 12.5,
+                color: Color::from_rgb(1.0, 0.0, 0.0),
+                length: 0.20,
                 label: true,
                 width: 2.0,
                 skip: None,
+                steps: Some(1),
             },
             Tick {
-                first: 0.0,
-                every: 25.0,
+                first: 25.0,
+                step: 25.0,
                 color: Color::WHITE,
-                size: 0.10,
+                length: 0.10,
                 label: true,
-                width: 2.0,
+                width: 1.0,
                 skip: None,
+                steps: None,
+            },
+            Tick {
+                first: 25.0,
+                step: 75.0,
+                color: Color::WHITE,
+                length: 0.25,
+                label: true,
+                width: 1.0,
+                skip: None,
+                steps: None,
             },
         ];
         let mut gauge = Gauge::new(0.0, 100.0, 0.30, 0.60, Closing::None, &ticks);
@@ -56,7 +65,7 @@ impl Application for Dashboard {
         String::from("Dashboard demo for Round Gauge")
     }
 
-    fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
+    fn update(&mut self, _: Self::Message) -> Command<Self::Message> {
         Command::none()
     }
 
