@@ -1,5 +1,5 @@
 use iced::widget::canvas::path::Builder;
-use iced::widget::canvas::{stroke, Frame, LineCap, Path, Stroke};
+use iced::widget::canvas::{stroke, Fill, Frame, LineCap, Path, Stroke};
 use iced::{Color, Point, Vector};
 
 pub trait Needle {
@@ -18,7 +18,7 @@ pub trait Needle {
     fn draw(&self, gauge_radius: f32, value: f32, frame: &mut Frame) {
         let tip = self.tip(gauge_radius);
         let path = self.path(gauge_radius);
-        frame.stroke(&path, self.stroke(gauge_radius / 100.0));
+        frame.fill(&path, Fill::default());
         frame.translate(Vector::new(tip.x, tip.y));
         frame.fill_text(format!("{}", value));
     }

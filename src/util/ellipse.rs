@@ -28,6 +28,7 @@ impl Ellipse {
     }
 
     fn get_relative_point(&self, angle: Angle) -> (f32, f32) {
+        println!("get_relative_point {angle}");
         if self.major_curvature.abs() < EPS {
             let beta = angle + self.angle;
             let cos_gamma = (PI / 2.0 + self.angle - beta).cos().abs();

@@ -1,5 +1,6 @@
 use crate::needle::{Needle, Needles};
 use crate::pin::{Pin, Pins};
+use crate::tick::DefaultTick;
 use crate::{Ellipse, Tick};
 use iced::theme::palette::Extended;
 use iced::widget::canvas::path::arc::Elliptical;
@@ -16,20 +17,30 @@ pub enum Closing {
     Sector,
 }
 
+pub type Radians = f32;
+
 pub struct Gauge {
+    /// Current unit value
     value: f32,
     needle_gfx: Cache,
     bg_gfx: Cache,
     border_gfx: Cache,
     ticks_gfx: Cache,
     pin_gfx: Cache,
-    length: f32,
-    rotate: f32,
+    /// Radians of needle movement
+    length: Radians,
+    /// Radians of rotation
+    rotate: Radians,
+    /// Unit value minimum
     min: f32,
+    /// Unit value maximum
     max: f32,
-    step: f32,
+    /// Radians of movement per unit value
+    step: Radians,
+    /// Number of displayable unit steps at current resolution
+    steps: usize,
     closing: Closing,
-    ticks: Vec<Tick>,
+    ticks: Box<dyn Tick>,
     pub needle: Box<dyn Needle>,
     pub pin: Box<dyn Pin>,
 }
@@ -43,7 +54,7 @@ impl Gauge {
         length: f32,
         rotate: f32,
         closing: Closing,
-        ticks: &Vec<Tick>,
+        ticks: Box<dyn Tick>,
     ) -> Self {
         // wait for builder impl
         let res = 1.0; // resolution: ie. visible values
@@ -51,8 +62,8 @@ impl Gauge {
         // derived
         let rotate = TAU * rotate;
         let length = TAU * length;
-        let cnt = (max - min) / res;
-        let step = length / cnt;
+        let steps = (max - min) / res;
+        let step = length / steps;
 
         Self {
             value: 0.0,
@@ -66,8 +77,9 @@ impl Gauge {
             min,
             max,
             step,
+            steps: steps as usize,
             closing,
-            ticks: ticks.clone(),
+            ticks,
             needle: Box::new(Needles::Diamond),
             pin: Box::new(Pins::Small),
         }
@@ -185,7 +197,8 @@ impl<M> Program<M> for Gauge {
     ) -> Vec<Geometry> {
         let bg = self.bg_gfx.draw(bounds.size(), |frame| {
             let center = frame.center();
-            let radius = radius_for_frame(frame);
+            let width = border_width(frame);
+            let radius = border_radius(frame, width);
 
             let background = self.bg_path(center, radius);
             let style = Style::from(theme);
@@ -194,8 +207,8 @@ impl<M> Program<M> for Gauge {
 
         let border = self.border_gfx.draw(bounds.size(), |frame| {
             let center = frame.center();
-            let radius = radius_for_frame(frame);
-            let width = radius / 50.0;
+            let width = border_width(frame);
+            let radius = border_radius(frame, width);
 
             let background = self.bg_path(center, radius);
             let style = Style::from(theme);
@@ -204,7 +217,7 @@ impl<M> Program<M> for Gauge {
 
         let needle = self.needle_gfx.draw(bounds.size(), |frame| {
             let center = frame.center();
-            let radius = radius_for_frame(frame);
+            let radius = frame_rad(frame);
 
             frame.with_save(|frame| {
                 frame.translate(Vector::new(center.x, center.y));
@@ -216,60 +229,36 @@ impl<M> Program<M> for Gauge {
 
         let ticks = self.ticks_gfx.draw(bounds.size(), |frame| {
             let center = frame.center();
-            let radius = radius_for_frame(frame);
-            let width = radius / 100.0;
+            let radius = tick_radius(frame);
 
+            let tick = &self.ticks;
             frame.with_save(|frame| {
                 frame.translate(Vector::new(center.x, center.y));
-
                 frame.rotate(self.rotate);
-
-                let outer = Ellipse::round(radius);
-                for tick in &self.ticks {
-                    let inner = Ellipse::round(radius - radius * tick.length);
-                    let mut current_step = 0usize;
-                    let mut i = tick.first;
-                    loop {
-                        if tick.skip.map_or(true, |skip| current_step % skip != 0) {
-                            let angle = self.step * i;
-                            let p1 = inner.get_point(angle);
-                            let p2 = outer.get_point(angle);
-
-                            let path = Path::line(p1, p2);
-                            frame.with_save(|frame| {
-                                frame.stroke(&path, self.stroke(width * tick.width, tick.color));
-                                frame.translate(Vector::new(p1.x, p1.y));
-                                if tick.label {
-                                    frame.fill_text(format!("{i}"));
-                                }
-                            });
-                        }
-
-                        if i * self.step >= self.length {
-                            break;
-                        }
-
-                        if let Some(max) = tick.steps {
-                            if max <= current_step {
-                                break;
-                            }
-                        }
-
-                        i += tick.step;
-                        current_step += 1;
-                    }
-                }
+                tick.draw(frame, radius, self.length, self.step, self.rotate);
             });
         });
 
         let pin = self.pin_gfx.draw(bounds.size(), |frame| {
-            self.pin.draw(radius_for_frame(frame), frame);
+            self.pin.draw(frame_rad(frame), frame);
         });
 
         vec![bg, ticks, border, needle, pin]
     }
 }
 
-fn radius_for_frame(frame: &Frame) -> f32 {
-    frame.width().min(frame.height()) / 2.5
+fn frame_rad(frame: &Frame) -> f32 {
+    frame.width().min(frame.height()) / 2.0
+}
+
+fn border_radius(frame: &Frame, border_width: f32) -> f32 {
+    frame_rad(frame) - border_width
+}
+
+fn tick_radius(frame: &Frame) -> f32 {
+    frame_rad(frame) * 0.8
+}
+
+fn border_width(frame: &Frame) -> f32 {
+    frame_rad(frame) / 50.0
 }

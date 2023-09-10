@@ -1,16 +1,24 @@
 use iced::widget::{canvas, container, toggler, Column, Row};
-use iced::{executor, Application, Command, Element, Length, Renderer, Subscription, Theme};
+use iced::Event::Window;
+use iced::{
+    executor, window, Application, Command, Element, Length, Renderer, Subscription, Theme,
+};
 use iced::{Color, Settings};
 use std::time::Duration;
 
 use crate::Msg::Update;
 use iced::time;
 use iced_gauges::round::{Closing, Gauge};
+use iced_gauges::tick::DefaultTick;
 use iced_gauges::Tick;
 
 fn main() -> iced::Result {
     Dashboard::run(Settings {
         antialiasing: true,
+        window: window::Settings {
+            size: (1280, 800),
+            ..window::Settings::default()
+        },
         ..Settings::default()
     })
 }
@@ -40,40 +48,29 @@ impl Application for Dashboard {
     type Flags = ();
 
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
-        let ticks = vec![
-            Tick {
-                first: 0.0,
-                step: 1.0,
-                color: Color::WHITE,
-                length: 0.10,
-                label: false,
-                width: 2.0,
-                skip: Some(5),
-                steps: None,
-            },
-            Tick {
-                first: 0.0,
-                step: 5.0,
-                color: Color::BLACK,
-                length: 0.30,
-                label: true,
-                width: 1.0,
-                skip: None,
-                steps: None,
-            },
-        ];
+        let ticks = Box::new(DefaultTick {
+            first: 0.0,
+            major_step: 5.0,
+            minor_step: 1.0,
+            major_color: Color::BLACK,
+            minor_color: Color::WHITE,
+            major_length: 0.30,
+            minor_length: 0.175,
+            label: true,
+            width: 1.5,
+        });
         (
             Dashboard {
                 gauge: vec![
-                    Gauge::new(0.0, 85.0, 0.90, 0.30, Closing::Segment, &ticks),
-                    Gauge::new(0.0, 85.0, 0.90, 0.30, Closing::Segment, &ticks),
-                    Gauge::new(0.0, 85.0, 0.90, 0.30, Closing::Segment, &ticks),
-                    Gauge::new(0.0, 85.0, 0.35, 0.90, Closing::None, &ticks),
-                    Gauge::new(0.0, 85.0, 0.35, 0.40, Closing::Sector, &ticks),
-                    Gauge::new(0.0, 85.0, 0.35, 0.90, Closing::None, &ticks),
-                    Gauge::new(0.0, 85.0, 0.75, 0.0, Closing::None, &ticks),
-                    Gauge::new(0.0, 42.5, 1.0, 0.75, Closing::None, &ticks),
-                    Gauge::new(0.0, 85.0, 0.50, 0.30, Closing::Sector, &ticks),
+                    Gauge::new(0.0, 85.0, 0.90, 0.30, Closing::Segment, ticks.clone()),
+                    Gauge::new(0.0, 85.0, 0.90, 0.30, Closing::Segment, ticks.clone()),
+                    Gauge::new(0.0, 85.0, 0.90, 0.30, Closing::Segment, ticks.clone()),
+                    Gauge::new(0.0, 85.0, 0.35, 0.90, Closing::None, ticks.clone()),
+                    Gauge::new(0.0, 85.0, 0.35, 0.40, Closing::Sector, ticks.clone()),
+                    Gauge::new(0.0, 85.0, 0.35, 0.90, Closing::None, ticks.clone()),
+                    Gauge::new(0.0, 85.0, 0.75, 0.0, Closing::None, ticks.clone()),
+                    Gauge::new(0.0, 42.5, 1.0, 0.75, Closing::None, ticks.clone()),
+                    Gauge::new(0.0, 85.0, 0.50, 0.30, Closing::Sector, ticks.clone()),
                 ],
                 state: State::Accel(0.0),
                 dark_mode: false,
