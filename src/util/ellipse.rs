@@ -1,5 +1,6 @@
-use iced::Point;
 use std::f32::consts::PI;
+
+use iced::Point;
 
 const EPS: f32 = 1.0E-6;
 type Angle = f32;
@@ -28,7 +29,6 @@ impl Ellipse {
     }
 
     fn get_relative_point(&self, angle: Angle) -> (f32, f32) {
-        println!("get_relative_point {angle}");
         if self.major_curvature.abs() < EPS {
             let beta = angle + self.angle;
             let cos_gamma = (PI / 2.0 + self.angle - beta).cos().abs();

@@ -1,10 +1,11 @@
 use iced::widget::{canvas, container, Row};
+use iced::Settings;
 use iced::{executor, Application, Command, Element, Length, Renderer, Theme};
-use iced::{Color, Settings};
+
 use iced_gauges::pin::Pins;
 use iced_gauges::round::{Closing, Gauge};
-use iced_gauges::tick::DefaultTick;
-use iced_gauges::Tick;
+use iced_gauges::style::Style;
+use iced_gauges::tick::MajorMinor;
 
 struct Dashboard {
     gauge: Gauge,
@@ -24,18 +25,8 @@ impl Application for Dashboard {
     type Flags = ();
 
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
-        let ticks = Box::new(DefaultTick {
-            first: 0.0,
-            major_step: 25.0,
-            minor_step: 5.0,
-            major_color: Color::BLACK,
-            minor_color: Color::WHITE,
-            major_length: 0.30,
-            minor_length: 0.175,
-            label: true,
-            width: 1.5,
-        });
-        let mut gauge = Gauge::new(0.0, 100.0, 0.30, 0.60, Closing::None, ticks);
+        let ticks = MajorMinor::boxed(0.0, 25.0, 5.0, 0.30, true);
+        let mut gauge = Gauge::new(0.0, 100.0, 0.30, 0.60, Closing::None, ticks, Style::Default);
         gauge.pin = Box::new(Pins::Large);
 
         (Dashboard { gauge }, Command::none())

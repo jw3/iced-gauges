@@ -1,17 +1,22 @@
-use crate::Ellipse;
 use iced::widget::canvas::path::arc::Elliptical;
 use iced::widget::canvas::path::Builder;
-use iced::widget::canvas::{stroke, Frame, LineCap, Path, Stroke};
+use iced::widget::canvas::{stroke, Frame, LineCap, Path, Stroke, Text};
 use iced::{Color, Point, Vector};
 
+use crate::style::Appearance;
+use crate::util::frame;
+use crate::Ellipse;
+
 pub trait Tick {
-    fn path(&self, gauge_radius: f32) -> Path;
-    fn stroke<'a>(&self, width: f32, color: Color) -> Stroke<'a>;
-    fn draw(&self, frame: &mut Frame, gauge_radius: f32, size: f32, step: f32, rotate: f32);
+    /// Draw the ticks onto the frame
+    /// The gauge radius is defined in pixels
+    /// The gauge length defines the radians of needle movement
+    /// The step length defines the radians of movement per unit value
+    fn draw(&self, frame: &mut Frame, style: &Appearance, gauge_length: f32, step_length: f32);
 }
 
 #[derive(Copy, Clone, Debug)]
-pub struct DefaultTick {
+pub struct MajorMinor {
     /// radian position of the first tick
     pub first: f32,
     /// the number of units of measure (uom) between ticks
@@ -20,60 +25,47 @@ pub struct DefaultTick {
     /// length of stroke, as ratio of radius 0.0 -- 1.0
     pub major_length: f32,
     pub minor_length: f32,
-    /// width of stroke
-    pub width: f32,
     pub label: bool,
-    pub major_color: Color,
-    pub minor_color: Color,
 }
 
-impl DefaultTick {
+impl MajorMinor {
     pub fn boxed(
         first: f32,
         major_step: f32,
         minor_step: f32,
         length: f32,
-        width: f32,
         label: bool,
-        major_color: Color,
-        minor_color: Color,
-    ) -> Self {
-        DefaultTick {
+    ) -> Box<Self> {
+        Box::new(MajorMinor {
             first,
             major_step,
             minor_step,
             major_length: length,
             minor_length: length * 0.75,
-            width,
             label,
-            major_color,
-            minor_color,
-        }
+        })
     }
 }
 
-impl Tick for DefaultTick {
-    fn path(&self, gauge_radius: f32) -> Path {
-        todo!()
+fn stroke<'a>(width: f32, color: Color) -> Stroke<'a> {
+    Stroke {
+        width,
+        style: stroke::Style::Solid(color),
+        line_cap: LineCap::Round,
+        ..Stroke::default()
     }
+}
 
-    fn stroke<'a>(&self, width: f32, color: Color) -> Stroke<'a> {
-        Stroke {
-            width,
-            style: stroke::Style::Solid(color),
-            line_cap: LineCap::Round,
-            ..Stroke::default()
-        }
-    }
-
-    fn draw(&self, frame: &mut Frame, radius: f32, size: f32, step: f32, rotate: f32) {
+impl Tick for MajorMinor {
+    fn draw(&self, frame: &mut Frame, style: &Appearance, size: f32, step: f32) {
         let mut i = self.first;
-        let mut current_step = 0;
+        let radius = frame::radius(frame) * style.tick_border_inset_ratio;
 
-        let width = radius / 100.0;
         let major = Ellipse::round(radius - radius * self.major_length);
         let minor = Ellipse::round(radius - radius * self.minor_length);
         let outer = Ellipse::round(radius);
+
+        let width_ratio = radius / 100.0;
 
         loop {
             match (i % self.major_step == 0.0, i % self.minor_step == 0.0) {
@@ -84,10 +76,20 @@ impl Tick for DefaultTick {
                     let path = Path::line(p1, p2);
 
                     frame.with_save(|frame| {
-                        frame.stroke(&path, self.stroke(width * self.width, self.major_color));
+                        frame.stroke(
+                            &path,
+                            stroke(
+                                width_ratio * style.major_tick_width_ratio,
+                                style.major_tick_color,
+                            ),
+                        );
                         frame.translate(Vector::new(p1.x, p1.y));
                         if self.label {
-                            frame.fill_text(format!("{i}"));
+                            frame.fill_text(Text {
+                                content: i.to_string(),
+                                color: style.tick_text_color,
+                                ..Text::default()
+                            });
                         }
                     });
                 }
@@ -98,7 +100,13 @@ impl Tick for DefaultTick {
                     let path = Path::line(p1, p2);
 
                     frame.with_save(|frame| {
-                        frame.stroke(&path, self.stroke(width * self.width, self.minor_color));
+                        frame.stroke(
+                            &path,
+                            stroke(
+                                width_ratio * style.minor_tick_width_ratio,
+                                style.minor_tick_color,
+                            ),
+                        );
                         frame.translate(Vector::new(p1.x, p1.y));
                     });
                 }
@@ -110,7 +118,6 @@ impl Tick for DefaultTick {
             }
 
             i += 1.0;
-            current_step += 1;
         }
 
         frame.with_save(|frame| {
@@ -123,7 +130,10 @@ impl Tick for DefaultTick {
                 end_angle: size,
             });
             let out = builder.build();
-            frame.stroke(&out, self.stroke(width * self.width, Color::BLACK));
+            frame.stroke(
+                &out,
+                stroke(width_ratio * style.tick_border_width_ratio, Color::BLACK),
+            );
         });
     }
 }

@@ -1,15 +1,15 @@
-use crate::needle::{Needle, Needles};
-use crate::pin::{Pin, Pins};
-use crate::tick::DefaultTick;
-use crate::{Ellipse, Tick};
-use iced::theme::palette::Extended;
+use std::f32::consts::TAU;
+
 use iced::widget::canvas::path::arc::Elliptical;
 use iced::widget::canvas::path::Builder;
-use iced::widget::canvas::{
-    stroke, Cache, Cursor, Frame, Geometry, LineCap, Path, Program, Stroke,
-};
+use iced::widget::canvas::{stroke, Cache, Cursor, Geometry, LineCap, Path, Program, Stroke};
 use iced::{Color, Point, Rectangle, Theme, Vector};
-use std::f32::consts::TAU;
+
+use crate::needle::{Needle, Needles};
+use crate::pin::{Pin, Pins};
+use crate::style::Style;
+use crate::util::frame;
+use crate::Tick;
 
 pub enum Closing {
     None,
@@ -40,9 +40,10 @@ pub struct Gauge {
     /// Number of displayable unit steps at current resolution
     steps: usize,
     closing: Closing,
-    ticks: Box<dyn Tick>,
+    pub ticks: Box<dyn Tick>,
     pub needle: Box<dyn Needle>,
     pub pin: Box<dyn Pin>,
+    pub style: Style,
 }
 
 impl Gauge {
@@ -55,6 +56,7 @@ impl Gauge {
         rotate: f32,
         closing: Closing,
         ticks: Box<dyn Tick>,
+        style: Style,
     ) -> Self {
         // wait for builder impl
         let res = 1.0; // resolution: ie. visible values
@@ -82,6 +84,7 @@ impl Gauge {
             ticks,
             needle: Box::new(Needles::Diamond),
             pin: Box::new(Pins::Small),
+            style,
         }
     }
 
@@ -143,48 +146,6 @@ impl Gauge {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Style {
-    pub background: Color,
-    pub border: Color,
-}
-
-impl Style {
-    pub const LIGHT: Style = Style {
-        background: Color::from_rgb(18.0 / 255.0, 147.0 / 255.0, 216.0 / 255.0),
-        border: Color::BLACK,
-    };
-
-    pub const DARK: Style = Style {
-        background: Color::from_rgb(48.0 / 255.0, 71.0 as f32 / 255.0, 94.0 as f32 / 255.0),
-        border: Color {
-            r: 246.0 / 255.0,
-            g: 88.0 / 255.0,
-            b: 7.0 / 255.0,
-            a: 1.0,
-        },
-    };
-}
-
-impl From<&Theme> for Style {
-    fn from(value: &Theme) -> Self {
-        match value {
-            Theme::Light => Style::LIGHT,
-            Theme::Dark => Style::DARK,
-            Theme::Custom(_) => Style::from(value.extended_palette()),
-        }
-    }
-}
-
-impl From<&Extended> for Style {
-    fn from(x: &Extended) -> Self {
-        Self {
-            background: x.background.base.color,
-            border: x.secondary.weak.color,
-        }
-    }
-}
-
 impl<M> Program<M> for Gauge {
     type State = ();
 
@@ -195,29 +156,35 @@ impl<M> Program<M> for Gauge {
         bounds: Rectangle,
         _cursor: Cursor,
     ) -> Vec<Geometry> {
-        let bg = self.bg_gfx.draw(bounds.size(), |frame| {
-            let center = frame.center();
-            let width = border_width(frame);
-            let radius = border_radius(frame, width);
+        let style = self.style.for_theme(theme);
 
-            let background = self.bg_path(center, radius);
-            let style = Style::from(theme);
-            frame.fill(&background, style.background);
+        let bg = self.bg_gfx.draw(bounds.size(), |frame| {
+            println!("drawing bg");
+
+            let center = frame.center();
+
+            let frame_radius = frame::radius(frame);
+            let border_radius = frame_radius - frame_radius / style.border_width_ratio;
+
+            let background = self.bg_path(center, border_radius);
+            frame.fill(&background, style.background_color);
         });
 
         let border = self.border_gfx.draw(bounds.size(), |frame| {
-            let center = frame.center();
-            let width = border_width(frame);
-            let radius = border_radius(frame, width);
+            println!("drawing border");
 
-            let background = self.bg_path(center, radius);
-            let style = Style::from(theme);
-            frame.stroke(&background, self.stroke(width, style.border));
+            let center = frame.center();
+            let frame_radius = frame::radius(frame);
+            let border_width = frame_radius / style.border_width_ratio;
+            let border_inner_radius = frame_radius - border_width;
+
+            let background = self.bg_path(center, border_inner_radius);
+            frame.stroke(&background, self.stroke(border_width, style.border_color));
         });
 
         let needle = self.needle_gfx.draw(bounds.size(), |frame| {
             let center = frame.center();
-            let radius = frame_rad(frame);
+            let radius = frame::radius(frame);
 
             frame.with_save(|frame| {
                 frame.translate(Vector::new(center.x, center.y));
@@ -228,37 +195,22 @@ impl<M> Program<M> for Gauge {
         });
 
         let ticks = self.ticks_gfx.draw(bounds.size(), |frame| {
+            println!("drawing ticks");
+
             let center = frame.center();
-            let radius = tick_radius(frame);
 
             let tick = &self.ticks;
             frame.with_save(|frame| {
                 frame.translate(Vector::new(center.x, center.y));
                 frame.rotate(self.rotate);
-                tick.draw(frame, radius, self.length, self.step, self.rotate);
+                tick.draw(frame, &style, self.length, self.step);
             });
         });
 
         let pin = self.pin_gfx.draw(bounds.size(), |frame| {
-            self.pin.draw(frame_rad(frame), frame);
+            self.pin.draw(frame::radius(frame), frame);
         });
 
         vec![bg, ticks, border, needle, pin]
     }
-}
-
-fn frame_rad(frame: &Frame) -> f32 {
-    frame.width().min(frame.height()) / 2.0
-}
-
-fn border_radius(frame: &Frame, border_width: f32) -> f32 {
-    frame_rad(frame) - border_width
-}
-
-fn tick_radius(frame: &Frame) -> f32 {
-    frame_rad(frame) * 0.8
-}
-
-fn border_width(frame: &Frame) -> f32 {
-    frame_rad(frame) / 50.0
 }
