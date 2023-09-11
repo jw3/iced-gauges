@@ -4,7 +4,7 @@ use iced::{executor, Application, Command, Element, Length, Renderer, Theme};
 
 use iced_gauges::pin::Pins;
 use iced_gauges::round::{Closing, Gauge};
-use iced_gauges::style::Style;
+use iced_gauges::style::{Appearance, Style};
 use iced_gauges::tick::MajorMinor;
 
 struct Dashboard {
@@ -25,9 +25,15 @@ impl Application for Dashboard {
     type Flags = ();
 
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
+        let style = Style::Custom(Appearance {
+            pin_diameter_ratio: 1.0,
+            pin_border_width_ratio: 0.10,
+            ..Default::default()
+        });
+
         let ticks = MajorMinor::boxed(0.0, 25.0, 5.0, 0.30, true);
-        let mut gauge = Gauge::new(0.0, 100.0, 0.30, 0.60, Closing::None, ticks, Style::Default);
-        gauge.pin = Box::new(Pins::Large);
+        let mut gauge = Gauge::new(0.0, 100.0, 0.30, 0.60, Closing::None, ticks, style);
+        gauge.pin = Box::new(Pins::Hollow);
 
         (Dashboard { gauge }, Command::none())
     }

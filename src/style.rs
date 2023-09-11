@@ -23,6 +23,13 @@ pub struct Appearance {
 
     /// Spacing of tick border from center as ratio of radius
     pub tick_border_inset_ratio: f32,
+
+    pub pin_color: Color,
+    pub pin_border_color: Color,
+    /// Diameter of pin as ratio of radius
+    pub pin_diameter_ratio: f32,
+    /// Width of pin border as ratio of radius
+    pub pin_border_width_ratio: f32,
 }
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -69,6 +76,11 @@ const LIGHT_DEFAULT: Appearance = Appearance {
     minor_tick_color: Color::WHITE,
     major_tick_width_ratio: 1.0,
     minor_tick_width_ratio: 0.8,
+
+    pin_color: Color::WHITE,
+    pin_border_color: Color::BLACK,
+    pin_diameter_ratio: 0.5,
+    pin_border_width_ratio: 0.0,
 };
 
 const DARK_DEFAULT: Appearance = Appearance {
@@ -82,4 +94,9 @@ const DARK_DEFAULT: Appearance = Appearance {
     minor_tick_color: Color::from_rgba(246.0 / 255.0, 88.0 / 255.0, 7.0 / 255.0, 1.0),
     major_tick_width_ratio: 1.0,
     minor_tick_width_ratio: 0.8,
+
+    pin_color: Color::WHITE,
+    pin_border_color: Color::BLACK,
+    pin_diameter_ratio: 0.5,
+    pin_border_width_ratio: 0.0,
 };

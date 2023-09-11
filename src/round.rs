@@ -83,7 +83,7 @@ impl Gauge {
             closing,
             ticks,
             needle: Box::new(Needles::Diamond),
-            pin: Box::new(Pins::Small),
+            pin: Box::new(Pins::Solid),
             style,
         }
     }
@@ -208,7 +208,7 @@ impl<M> Program<M> for Gauge {
         });
 
         let pin = self.pin_gfx.draw(bounds.size(), |frame| {
-            self.pin.draw(frame::radius(frame), frame);
+            self.pin.draw(frame, style);
         });
 
         vec![bg, ticks, border, needle, pin]
