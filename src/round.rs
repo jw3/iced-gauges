@@ -173,36 +173,33 @@ impl<M> Program<M> for Gauge {
         let bg = self.bg_gfx.draw(bounds.size(), |frame| {
             println!("drawing bg");
 
-            let center = frame.center();
-
             let frame_radius = frame::radius(frame);
             let border_radius = frame_radius - frame_radius / style.border_width_ratio;
 
-            let background = self.bg_path(center, border_radius);
+            let background = self.bg_path(frame.center(), border_radius);
             frame.fill(&background, style.background_color);
         });
 
         let border = self.border_gfx.draw(bounds.size(), |frame| {
             println!("drawing border");
 
-            let center = frame.center();
             let frame_radius = frame::radius(frame);
             let border_width = frame_radius / style.border_width_ratio;
             let border_inner_radius = frame_radius - border_width;
 
-            let background = self.bg_path(center, border_inner_radius);
-            frame.stroke(&background, self.stroke(border_width, style.border_color));
+            frame.stroke(
+                &self.bg_path(frame.center(), border_inner_radius),
+                self.stroke(border_width, style.border_color),
+            );
         });
 
         let needle = self.needle_gfx.draw(bounds.size(), |frame| {
             let center = frame.center();
-            let radius = frame::radius(frame);
-
             frame.with_save(|frame| {
                 frame.translate(Vector::new(center.x, center.y));
                 frame.rotate(self.rotate);
-                frame.rotate(self.value as f32 * self.step);
-                self.needle.draw(radius, self.value, frame);
+                frame.rotate(self.value * self.step);
+                self.needle.draw(frame::radius(frame), self.value, frame);
             });
         });
 
@@ -210,12 +207,10 @@ impl<M> Program<M> for Gauge {
             println!("drawing ticks");
 
             let center = frame.center();
-
-            let tick = &self.ticks;
             frame.with_save(|frame| {
                 frame.translate(Vector::new(center.x, center.y));
                 frame.rotate(self.rotate);
-                tick.draw(frame, &style, self.length, self.step);
+                self.ticks.draw(frame, &style, self.length, self.step);
             });
         });
 
