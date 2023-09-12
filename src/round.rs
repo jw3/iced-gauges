@@ -171,8 +171,6 @@ impl<M> Program<M> for Gauge {
         let style = self.style.for_theme(theme);
 
         let bg = self.bg_gfx.draw(bounds.size(), |frame| {
-            println!("drawing bg");
-
             let frame_radius = frame::radius(frame);
             let border_radius = frame_radius - frame_radius / style.border_width_ratio;
 
@@ -181,8 +179,6 @@ impl<M> Program<M> for Gauge {
         });
 
         let border = self.border_gfx.draw(bounds.size(), |frame| {
-            println!("drawing border");
-
             let frame_radius = frame::radius(frame);
             let border_width = frame_radius / style.border_width_ratio;
             let border_inner_radius = frame_radius - border_width;
@@ -204,8 +200,6 @@ impl<M> Program<M> for Gauge {
         });
 
         let ticks = self.ticks_gfx.draw(bounds.size(), |frame| {
-            println!("drawing ticks");
-
             let center = frame.center();
             frame.with_save(|frame| {
                 frame.translate(Vector::new(center.x, center.y));

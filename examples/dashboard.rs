@@ -17,7 +17,7 @@ fn main() -> iced::Result {
     Dashboard::run(Settings {
         antialiasing: true,
         window: window::Settings {
-            size: (1280, 800),
+            size: (1000, 700),
             ..window::Settings::default()
         },
         ..Settings::default()
@@ -49,16 +49,18 @@ impl Application for Dashboard {
     type Flags = ();
 
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
-        let ticks = MajorMinor::boxed(0.0, 5.0, 1.0, 0.30, true);
+        let ticks = MajorMinor::boxed(0.0, 5.0, 1.0, 0.30);
+        let small_ticks = MajorMinor::boxed(0.0, 25.0, 5.0, 0.30);
         let style = Style::Themed {
             light: Appearance {
-                background_color: Color::from_rgb(0.5, 0.5, 0.5),
                 pin_border_width_ratio: 0.1,
                 pin_diameter_ratio: 0.5,
+                pin_color: Color::from_rgb(0.5, 0.5, 0.5),
                 ..LIGHT_DEFAULT
             },
             dark: Appearance {
-                background_color: Color::from_rgb(0.1, 0.1, 0.3),
+                pin_border_width_ratio: 0.1,
+                pin_diameter_ratio: 0.5,
                 tick_text_color: Color::WHITE,
                 ..DARK_DEFAULT
             },
@@ -74,6 +76,54 @@ impl Application for Dashboard {
                         Closing::Segment,
                         ticks.clone(),
                         style,
+                    )
+                    .with_needle(Box::new(Needles::Arrow))
+                    .with_pin(Box::new(Pins::Hollow)),
+                    Gauge::new(
+                        0.0,
+                        125.0,
+                        0.35,
+                        0.60,
+                        Closing::None,
+                        small_ticks.clone(),
+                        style,
+                    ),
+                    Gauge::new(
+                        0.0,
+                        100.0,
+                        0.90,
+                        0.30,
+                        Closing::Segment,
+                        small_ticks.clone(),
+                        style,
+                    ),
+                    Gauge::new(
+                        0.0,
+                        100.0,
+                        0.35,
+                        0.40,
+                        Closing::Sector,
+                        small_ticks.clone(),
+                        style,
+                    )
+                    .with_needle(Box::new(Needles::Arrow)),
+                    Gauge::new(
+                        0.0,
+                        100.0,
+                        0.35,
+                        0.90,
+                        Closing::None,
+                        small_ticks.clone(),
+                        style,
+                    ),
+                    Gauge::new(
+                        0.0,
+                        100.0,
+                        0.75,
+                        0.0,
+                        Closing::None,
+                        small_ticks.clone(),
+                        style,
                     ),
                     Gauge::new(
                         0.0,
@@ -82,27 +132,21 @@ impl Application for Dashboard {
                         0.30,
                         Closing::Segment,
                         ticks.clone(),
-                        style,
-                    )
-                    .with_needle(Box::new(Needles::Arrow))
-                    .with_pin(Box::new(Pins::Hollow)),
-                    Gauge::new(
-                        0.0,
-                        85.0,
-                        0.90,
-                        0.30,
-                        Closing::Segment,
-                        ticks.clone(),
-                        style,
+                        Style::Themed {
+                            light: Appearance {
+                                tick_labels: false,
+                                pin_diameter_ratio: 0.8,
+                                ..Appearance::default()
+                            },
+                            dark: Appearance {
+                                tick_labels: false,
+                                pin_diameter_ratio: 0.8,
+                                ..Appearance::default()
+                            },
+                        },
                     )
                     .with_needle(Box::new(Needles::Triangle))
                     .with_pin(Box::new(Pins::Solid)),
-                    Gauge::new(0.0, 85.0, 0.35, 0.90, Closing::None, ticks.clone(), style),
-                    Gauge::new(0.0, 85.0, 0.35, 0.40, Closing::Sector, ticks.clone(), style),
-                    Gauge::new(0.0, 85.0, 0.35, 0.90, Closing::None, ticks.clone(), style),
-                    Gauge::new(0.0, 85.0, 0.75, 0.0, Closing::None, ticks.clone(), style),
-                    Gauge::new(0.0, 42.5, 1.0, 0.75, Closing::None, ticks.clone(), style),
-                    Gauge::new(0.0, 85.0, 0.50, 0.30, Closing::Sector, ticks.clone(), style),
                 ],
                 state: State::Accel(0.0),
                 dark_mode: false,
@@ -169,12 +213,12 @@ impl Application for Dashboard {
         )));
 
         let top = Row::new()
-            .push(canvas(gauges.next().unwrap()).width(200).height(200))
             .push(canvas(gauges.next().unwrap()).width(500).height(500))
-            .push(canvas(gauges.next().unwrap()).width(500).height(500))
-            .push(canvas(gauges.next().unwrap()).width(200).height(200));
+            .push(canvas(gauges.next().unwrap()).width(500).height(500));
 
         let bottom = Row::new()
+            .push(canvas(gauges.next().unwrap()).width(200).height(200))
+            .push(canvas(gauges.next().unwrap()).width(200).height(200))
             .push(canvas(gauges.next().unwrap()).width(200).height(200))
             .push(canvas(gauges.next().unwrap()).width(200).height(200))
             .push(canvas(gauges.next().unwrap()).width(200).height(200));

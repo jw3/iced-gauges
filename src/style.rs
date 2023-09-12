@@ -12,6 +12,7 @@ pub struct Appearance {
     pub border_color: Color,
 
     pub tick_text_color: Color,
+    pub tick_labels: bool,
 
     pub major_tick_color: Color,
     pub minor_tick_color: Color,
@@ -75,6 +76,7 @@ pub const LIGHT_DEFAULT: Appearance = Appearance {
     tick_border_inset_ratio: 0.8,
     border_color: Color::BLACK,
     tick_text_color: Color::BLACK,
+    tick_labels: true,
     major_tick_color: Color::BLACK,
     minor_tick_color: Color::WHITE,
     major_tick_width_ratio: 1.0,
@@ -85,7 +87,7 @@ pub const LIGHT_DEFAULT: Appearance = Appearance {
     pin_diameter_ratio: 0.5,
     pin_border_width_ratio: 0.0,
 
-    pin_style: PinOrder::Under,
+    pin_style: PinOrder::Over,
 };
 
 pub const DARK_DEFAULT: Appearance = Appearance {
@@ -95,6 +97,7 @@ pub const DARK_DEFAULT: Appearance = Appearance {
     tick_border_inset_ratio: 0.8,
     border_color: Color::from_rgba(246.0 / 255.0, 88.0 / 255.0, 7.0 / 255.0, 1.0),
     tick_text_color: Color::BLACK,
+    tick_labels: true,
     major_tick_color: Color::BLACK,
     minor_tick_color: Color::from_rgba(246.0 / 255.0, 88.0 / 255.0, 7.0 / 255.0, 1.0),
     major_tick_width_ratio: 1.0,

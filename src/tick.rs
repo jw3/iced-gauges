@@ -25,24 +25,16 @@ pub struct MajorMinor {
     /// length of stroke, as ratio of radius 0.0 -- 1.0
     pub major_length: f32,
     pub minor_length: f32,
-    pub label: bool,
 }
 
 impl MajorMinor {
-    pub fn boxed(
-        first: f32,
-        major_step: f32,
-        minor_step: f32,
-        length: f32,
-        label: bool,
-    ) -> Box<Self> {
+    pub fn boxed(first: f32, major_step: f32, minor_step: f32, length: f32) -> Box<Self> {
         Box::new(MajorMinor {
             first,
             major_step,
             minor_step,
             major_length: length,
             minor_length: length * 0.75,
-            label,
         })
     }
 }
@@ -84,7 +76,7 @@ impl Tick for MajorMinor {
                             ),
                         );
                         frame.translate(Vector::new(p1.x, p1.y));
-                        if self.label {
+                        if style.tick_labels {
                             frame.fill_text(Text {
                                 content: i.to_string(),
                                 color: style.tick_text_color,
