@@ -1,9 +1,10 @@
 use std::f32::consts::TAU;
 
+use iced::mouse::Cursor;
 use iced::widget::canvas::path::arc::Elliptical;
 use iced::widget::canvas::path::Builder;
-use iced::widget::canvas::{stroke, Cache, Cursor, Geometry, LineCap, Path, Program, Stroke};
-use iced::{Color, Point, Rectangle, Theme, Vector};
+use iced::widget::canvas::{stroke, Cache, Geometry, LineCap, Path, Program, Stroke};
+use iced::{mouse, Color, Point, Rectangle, Renderer, Theme, Vector};
 
 use crate::needle::{Needle, Needles};
 use crate::pin::{Pin, PinOrder, Pins};
@@ -163,14 +164,15 @@ impl<M> Program<M> for Gauge {
 
     fn draw(
         &self,
-        _state: &Self::State,
+        state: &Self::State,
+        renderer: &Renderer,
         theme: &Theme,
         bounds: Rectangle,
-        _cursor: Cursor,
+        cursor: Cursor,
     ) -> Vec<Geometry> {
         let style = self.style.for_theme(theme);
 
-        let bg = self.bg_gfx.draw(bounds.size(), |frame| {
+        let bg = self.bg_gfx.draw(renderer, bounds.size(), |frame| {
             let frame_radius = frame::radius(frame);
             let border_radius = frame_radius - frame_radius / style.border_width_ratio;
 
@@ -178,7 +180,7 @@ impl<M> Program<M> for Gauge {
             frame.fill(&background, style.background_color);
         });
 
-        let border = self.border_gfx.draw(bounds.size(), |frame| {
+        let border = self.border_gfx.draw(renderer, bounds.size(), |frame| {
             let frame_radius = frame::radius(frame);
             let border_width = frame_radius / style.border_width_ratio;
             let border_inner_radius = frame_radius - border_width;
@@ -189,7 +191,7 @@ impl<M> Program<M> for Gauge {
             );
         });
 
-        let needle = self.needle_gfx.draw(bounds.size(), |frame| {
+        let needle = self.needle_gfx.draw(renderer, bounds.size(), |frame| {
             let center = frame.center();
             frame.with_save(|frame| {
                 frame.translate(Vector::new(center.x, center.y));
@@ -199,7 +201,7 @@ impl<M> Program<M> for Gauge {
             });
         });
 
-        let ticks = self.ticks_gfx.draw(bounds.size(), |frame| {
+        let ticks = self.ticks_gfx.draw(renderer, bounds.size(), |frame| {
             let center = frame.center();
             frame.with_save(|frame| {
                 frame.translate(Vector::new(center.x, center.y));
@@ -208,7 +210,7 @@ impl<M> Program<M> for Gauge {
             });
         });
 
-        let pin = self.pin_gfx.draw(bounds.size(), |frame| {
+        let pin = self.pin_gfx.draw(renderer, bounds.size(), |frame| {
             self.pin.draw(frame, style);
         });
 

@@ -1,4 +1,5 @@
-use iced::widget::canvas::{stroke, Cache, Cursor, Geometry, LineCap, Path, Stroke};
+use iced::mouse::Cursor;
+use iced::widget::canvas::{stroke, Cache, Geometry, LineCap, Path, Stroke};
 use iced::widget::{canvas, container};
 use iced::{
     executor, Application, Color, Command, Element, Length, Point, Rectangle, Renderer, Settings,
@@ -63,12 +64,13 @@ impl canvas::Program<Msg> for Compass {
 
     fn draw(
         &self,
-        _state: &Self::State,
-        _theme: &Theme,
+        state: &Self::State,
+        renderer: &Renderer,
+        theme: &Theme,
         bounds: Rectangle,
-        _cursor: Cursor,
+        cursor: Cursor,
     ) -> Vec<Geometry> {
-        let bg = self.bg.draw(bounds.size(), |frame| {
+        let bg = self.bg.draw(renderer, bounds.size(), |frame| {
             println!("drawing bg");
             let center = frame.center();
             let radius = frame.width().min(frame.height()) / 2.5;
@@ -77,7 +79,7 @@ impl canvas::Program<Msg> for Compass {
             frame.fill(&background, Color::from_rgb8(0x12, 0x93, 0xD8));
         });
 
-        let frame = self.frame.draw(bounds.size(), |frame| {
+        let frame = self.frame.draw(renderer, bounds.size(), |frame| {
             println!("drawing frame");
 
             let center = frame.center();

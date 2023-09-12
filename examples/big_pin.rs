@@ -32,7 +32,7 @@ impl Application for Dashboard {
             ..Default::default()
         });
 
-        let ticks = MajorMinor::boxed(0.0, 25.0, 5.0, 0.30, true);
+        let ticks = MajorMinor::boxed(0.0, 25.0, 5.0, 0.30);
         let mut gauge = Gauge::new(0.0, 100.0, 0.30, 0.60, Closing::None, ticks, style);
         gauge.pin = Box::new(Pins::Hollow);
         gauge.needle = Box::new(Needles::Triangle);
