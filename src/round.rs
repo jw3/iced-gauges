@@ -88,6 +88,18 @@ impl Gauge {
         }
     }
 
+    #[must_use]
+    pub fn with_needle(mut self, needle: Box<dyn Needle>) -> Self {
+        self.needle = needle;
+        self
+    }
+
+    #[must_use]
+    pub fn with_pin(mut self, pin: Box<dyn Pin>) -> Self {
+        self.pin = pin;
+        self
+    }
+
     pub fn update_value(&mut self, v: f32) {
         // todo;; what to do about constraining value by min/max?
         if v < self.min || v > self.max {

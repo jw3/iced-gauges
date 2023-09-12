@@ -7,6 +7,8 @@ use std::time::Duration;
 
 use crate::Msg::Update;
 use iced::time;
+use iced_gauges::needle::Needles;
+use iced_gauges::pin::Pins;
 use iced_gauges::round::{Closing, Gauge};
 use iced_gauges::style::{Appearance, Style};
 use iced_gauges::tick::MajorMinor;
@@ -51,6 +53,8 @@ impl Application for Dashboard {
         let style = Style::Themed {
             light: Appearance {
                 background_color: Color::from_rgb(0.5, 0.5, 0.5),
+                pin_border_width_ratio: 0.1,
+                pin_diameter_ratio: 0.5,
                 ..Default::default()
             },
             dark: Appearance {
@@ -79,7 +83,9 @@ impl Application for Dashboard {
                         Closing::Segment,
                         ticks.clone(),
                         style,
-                    ),
+                    )
+                    .with_needle(Box::new(Needles::Arrow))
+                    .with_pin(Box::new(Pins::Hollow)),
                     Gauge::new(
                         0.0,
                         85.0,
@@ -88,7 +94,9 @@ impl Application for Dashboard {
                         Closing::Segment,
                         ticks.clone(),
                         style,
-                    ),
+                    )
+                    .with_needle(Box::new(Needles::Triangle))
+                    .with_pin(Box::new(Pins::Solid)),
                     Gauge::new(0.0, 85.0, 0.35, 0.90, Closing::None, ticks.clone(), style),
                     Gauge::new(0.0, 85.0, 0.35, 0.40, Closing::Sector, ticks.clone(), style),
                     Gauge::new(0.0, 85.0, 0.35, 0.90, Closing::None, ticks.clone(), style),

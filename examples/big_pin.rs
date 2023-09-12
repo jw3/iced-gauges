@@ -1,6 +1,7 @@
 use iced::widget::{canvas, container, Row};
 use iced::Settings;
 use iced::{executor, Application, Command, Element, Length, Renderer, Theme};
+use iced_gauges::needle::Needles;
 
 use iced_gauges::pin::Pins;
 use iced_gauges::round::{Closing, Gauge};
@@ -34,6 +35,7 @@ impl Application for Dashboard {
         let ticks = MajorMinor::boxed(0.0, 25.0, 5.0, 0.30, true);
         let mut gauge = Gauge::new(0.0, 100.0, 0.30, 0.60, Closing::None, ticks, style);
         gauge.pin = Box::new(Pins::Hollow);
+        gauge.needle = Box::new(Needles::Triangle);
 
         (Dashboard { gauge }, Command::none())
     }
