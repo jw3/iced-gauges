@@ -10,7 +10,7 @@ use iced::time;
 use iced_gauges::needle::Needles;
 use iced_gauges::pin::Pins;
 use iced_gauges::round::{Closing, Gauge};
-use iced_gauges::style::{Appearance, Style};
+use iced_gauges::style::{Appearance, Style, DARK_DEFAULT, LIGHT_DEFAULT};
 use iced_gauges::tick::MajorMinor;
 
 fn main() -> iced::Result {
@@ -55,12 +55,12 @@ impl Application for Dashboard {
                 background_color: Color::from_rgb(0.5, 0.5, 0.5),
                 pin_border_width_ratio: 0.1,
                 pin_diameter_ratio: 0.5,
-                ..Default::default()
+                ..LIGHT_DEFAULT
             },
             dark: Appearance {
                 background_color: Color::from_rgb(0.1, 0.1, 0.3),
                 tick_text_color: Color::WHITE,
-                ..Default::default()
+                ..DARK_DEFAULT
             },
         };
         (

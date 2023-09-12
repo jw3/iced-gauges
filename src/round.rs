@@ -6,7 +6,7 @@ use iced::widget::canvas::{stroke, Cache, Cursor, Geometry, LineCap, Path, Progr
 use iced::{Color, Point, Rectangle, Theme, Vector};
 
 use crate::needle::{Needle, Needles};
-use crate::pin::{Pin, Pins};
+use crate::pin::{Pin, PinOrder, Pins};
 use crate::style::Style;
 use crate::util::frame;
 use crate::Tick;
@@ -223,6 +223,9 @@ impl<M> Program<M> for Gauge {
             self.pin.draw(frame, style);
         });
 
-        vec![bg, ticks, border, needle, pin]
+        match style.pin_style {
+            PinOrder::Over => vec![bg, ticks, border, needle, pin],
+            PinOrder::Under => vec![bg, ticks, border, pin, needle],
+        }
     }
 }

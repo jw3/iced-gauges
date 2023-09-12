@@ -1,3 +1,4 @@
+use crate::pin::PinOrder;
 use iced::{Color, Theme};
 
 #[derive(Clone, Copy, Debug)]
@@ -30,6 +31,8 @@ pub struct Appearance {
     pub pin_diameter_ratio: f32,
     /// Width of pin border as ratio of radius
     pub pin_border_width_ratio: f32,
+
+    pub pin_style: PinOrder,
 }
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -65,7 +68,7 @@ impl Default for Appearance {
     }
 }
 
-const LIGHT_DEFAULT: Appearance = Appearance {
+pub const LIGHT_DEFAULT: Appearance = Appearance {
     background_color: Color::from_rgb(18.0 / 255.0, 146.0 / 255.0, 216.0 / 255.0),
     border_width_ratio: 50.0,
     tick_border_width_ratio: 1.0,
@@ -81,9 +84,11 @@ const LIGHT_DEFAULT: Appearance = Appearance {
     pin_border_color: Color::BLACK,
     pin_diameter_ratio: 0.5,
     pin_border_width_ratio: 0.0,
+
+    pin_style: PinOrder::Under,
 };
 
-const DARK_DEFAULT: Appearance = Appearance {
+pub const DARK_DEFAULT: Appearance = Appearance {
     background_color: Color::from_rgb(48.0 / 255.0, 71.0 / 255.0, 94.0 / 255.0),
     border_width_ratio: 50.0,
     tick_border_width_ratio: 1.0,
@@ -99,4 +104,6 @@ const DARK_DEFAULT: Appearance = Appearance {
     pin_border_color: Color::BLACK,
     pin_diameter_ratio: 0.5,
     pin_border_width_ratio: 0.0,
+
+    pin_style: PinOrder::Over,
 };

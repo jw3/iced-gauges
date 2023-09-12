@@ -2,6 +2,12 @@ use crate::style::Appearance;
 use crate::util::frame;
 use iced::widget::canvas::{stroke, Frame, LineCap, Path, Stroke};
 
+#[derive(Clone, Copy, Debug)]
+pub enum PinOrder {
+    Over,
+    Under,
+}
+
 pub trait Pin {
     fn path(&self, frame: &Frame, style: &Appearance) -> Path {
         Path::circle(
