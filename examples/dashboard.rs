@@ -77,6 +77,7 @@ impl Application for Dashboard {
                         ticks.clone(),
                         style,
                     )
+                    .with_name("Speed")
                     .with_needle(Box::new(Needles::Arrow))
                     .with_pin(Box::new(Pins::Hollow)),
                     Gauge::new(

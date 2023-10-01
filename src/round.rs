@@ -1,10 +1,13 @@
 use std::f32::consts::TAU;
 
+use iced::alignment::Horizontal;
 use iced::mouse::Cursor;
 use iced::widget::canvas::path::arc::Elliptical;
 use iced::widget::canvas::path::Builder;
 use iced::widget::canvas::{stroke, Cache, Geometry, LineCap, Path, Program, Stroke};
 use iced::{mouse, Color, Point, Rectangle, Renderer, Theme, Vector};
+use iced_widget::canvas;
+use iced_widget::core::Widget;
 
 use crate::needle::{Needle, Needles};
 use crate::pin::{Pin, PinOrder, Pins};
@@ -21,6 +24,7 @@ pub enum Closing {
 pub type Radians = f32;
 
 pub struct Gauge {
+    name: Option<String>,
     /// Current unit value
     value: f32,
     needle_gfx: Cache,
@@ -28,6 +32,7 @@ pub struct Gauge {
     border_gfx: Cache,
     ticks_gfx: Cache,
     pin_gfx: Cache,
+    label_gfx: Cache,
     /// Radians of needle movement
     length: Radians,
     /// Radians of rotation
@@ -69,12 +74,14 @@ impl Gauge {
         let step = length / steps;
 
         Self {
+            name: None,
             value: 0.0,
             needle_gfx: Default::default(),
             bg_gfx: Default::default(),
             border_gfx: Default::default(),
             ticks_gfx: Default::default(),
             pin_gfx: Default::default(),
+            label_gfx: Default::default(),
             length,
             rotate,
             min,
@@ -87,6 +94,12 @@ impl Gauge {
             pin: Box::new(Pins::Solid),
             style,
         }
+    }
+
+    #[must_use]
+    pub fn with_name(mut self, name: &str) -> Self {
+        self.name = Some(name.to_string());
+        self
     }
 
     #[must_use]
@@ -214,9 +227,22 @@ impl<M> Program<M> for Gauge {
             self.pin.draw(frame, style);
         });
 
+        let label = self.label_gfx.draw(renderer, bounds.size(), |frame| {
+            if let Some(name) = self.name.as_ref() {
+                let mut text = canvas::Text::from(name.as_str());
+                text.horizontal_alignment = Horizontal::Center;
+                let center = frame.center();
+                frame.translate(Vector::new(
+                    center.x,
+                    center.y + frame::radius(frame) * 0.75,
+                ));
+                frame.fill_text(text);
+            }
+        });
+
         match style.pin_style {
-            PinOrder::Over => vec![bg, ticks, border, needle, pin],
-            PinOrder::Under => vec![bg, ticks, border, pin, needle],
+            PinOrder::Over => vec![bg, ticks, border, needle, pin, label],
+            PinOrder::Under => vec![bg, ticks, border, pin, needle, label],
         }
     }
 }
