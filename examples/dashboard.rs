@@ -1,7 +1,5 @@
 use iced::widget::{canvas, container, toggler, Column, Row};
-use iced::{
-    executor, window, Application, Command, Element, Length, Renderer, Subscription, Theme,
-};
+use iced::{executor, window, Application, Element, Length, Renderer, Subscription, Theme};
 use iced::{Color, Settings};
 use std::time::Duration;
 
