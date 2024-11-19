@@ -1,5 +1,5 @@
 use iced::widget::{canvas, container, toggler, Column, Row};
-use iced::{executor, window, Application, Element, Length, Renderer, Subscription, Theme};
+use iced::{executor, window, Application, Element, Length, Renderer, Subscription, Task, Theme};
 use iced::{Color, Settings};
 use std::time::Duration;
 
@@ -12,14 +12,20 @@ use iced_gauges::style::{Appearance, Style, DARK_DEFAULT, LIGHT_DEFAULT};
 use iced_gauges::tick::MajorMinor;
 
 fn main() -> iced::Result {
-    Dashboard::run(Settings {
+    iced::application(
+        "Dashboard demo for Round Gauge",
+        Dashboard::update,
+        Dashboard::view,
+    )
+    .settings(Settings {
         antialiasing: true,
-        window: window::Settings {
-            size: (1000, 700),
-            ..window::Settings::default()
-        },
+        // window: window::Settings {
+        //     size: (1000, 700),
+        //     ..window::Settings::default()
+        // },
         ..Settings::default()
     })
+    .run_with(Dashboard::new)
 }
 
 enum State {
@@ -28,25 +34,20 @@ enum State {
     Decel(f32),
 }
 
-struct Dashboard {
-    gauge: Vec<Gauge>,
-    state: State,
-    dark_mode: bool,
-}
-
 #[derive(Debug)]
 enum Msg {
     Update,
     ThemeChange(bool),
 }
 
-impl Application for Dashboard {
-    type Executor = executor::Default;
-    type Message = Msg;
-    type Theme = Theme;
-    type Flags = ();
+struct Dashboard {
+    gauge: Vec<Gauge>,
+    state: State,
+    dark_mode: bool,
+}
 
-    fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
+impl Dashboard {
+    fn new() -> (Self, Task<Msg>) {
         let ticks = MajorMinor::boxed(0.0, 5.0, 1.0, 0.30);
         let small_ticks = MajorMinor::boxed(0.0, 25.0, 5.0, 0.30);
         let style = Style::Themed {
@@ -150,15 +151,11 @@ impl Application for Dashboard {
                 state: State::Accel(0.0),
                 dark_mode: false,
             },
-            Command::none(),
+            Task::none(),
         )
     }
 
-    fn title(&self) -> String {
-        String::from("Dashboard demo for Round Gauge")
-    }
-
-    fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
+    fn update(&mut self, message: Msg) -> Task<Msg> {
         match message {
             Update => match self.state {
                 State::Accel(v) => {
@@ -187,10 +184,10 @@ impl Application for Dashboard {
                 self.gauge.iter().for_each(|g| g.repaint());
             }
         }
-        Command::none()
+        Task::none()
     }
 
-    fn view(&self) -> Element<'_, Self::Message, Renderer<Self::Theme>> {
+    fn view(&self) -> Element<Msg> {
         // row
         //  col
         //   gauge 200x200
@@ -205,11 +202,11 @@ impl Application for Dashboard {
         //  indicator leds?....
 
         let mut gauges = self.gauge.iter();
-        let bar = Row::new().push(container(toggler(
-            Some("Dark Mode".to_string()),
-            self.dark_mode,
-            Msg::ThemeChange,
-        )));
+        // let bar = Row::new().push(container(toggler(
+        //     Some("Dark Mode".to_string()),
+        //     self.dark_mode,
+        //     Msg::ThemeChange,
+        // )));
 
         let top = Row::new()
             .push(canvas(gauges.next().unwrap()).width(500).height(500))
@@ -222,22 +219,24 @@ impl Application for Dashboard {
             .push(canvas(gauges.next().unwrap()).width(200).height(200))
             .push(canvas(gauges.next().unwrap()).width(200).height(200));
 
-        let row = Column::new().push(bar).push(top).push(bottom);
+        let row = Column::new() /*.push(bar)*/
+            .push(top)
+            .push(bottom);
         container(Column::new().push(row))
             .width(Length::Fill)
             .height(Length::Fill)
             .into()
     }
 
-    fn theme(&self) -> Self::Theme {
-        if self.dark_mode {
-            Theme::Dark
-        } else {
-            Theme::Light
-        }
-    }
+    // fn theme(&self) -> Self::Theme {
+    //     if self.dark_mode {
+    //         Theme::Dark
+    //     } else {
+    //         Theme::Light
+    //     }
+    // }
 
-    fn subscription(&self) -> Subscription<Self::Message> {
+    fn subscription(&self) -> Subscription<Msg> {
         use State::*;
 
         match self.state {
