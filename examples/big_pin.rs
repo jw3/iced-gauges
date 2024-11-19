@@ -27,7 +27,7 @@ struct Dashboard {
 }
 
 impl Dashboard {
-    fn new() -> (Dashboard, Task<Message>) {
+    fn new() -> (Self, Task<Message>) {
         let style = Style::Custom(Appearance {
             pin_diameter_ratio: 1.0,
             pin_border_width_ratio: 0.10,
