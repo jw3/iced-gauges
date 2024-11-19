@@ -83,6 +83,11 @@ impl Tick for MajorMinor {
                         );
                         frame.translate(Vector::new(p1.x, p1.y));
                         if style.tick_labels {
+                            // todo;; is the formula on this rotate
+                            //        1/2 pi  -  gauge rotation
+                            //        for big pin gauge rotation is .6, so
+                            //        .6 + 2.5 = 1/2 pi
+                            frame.rotate(2.5);
                             frame.fill_text(Text {
                                 content: i.to_string(),
                                 color: style.tick_text_color,
