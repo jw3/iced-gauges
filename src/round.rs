@@ -216,7 +216,8 @@ impl<M> Program<M> for Gauge {
             frame.with_save(|frame| {
                 frame.translate(Vector::new(center.x, center.y));
                 frame.rotate(self.rotate);
-                self.ticks.draw(frame, &style, self.length, self.step);
+                self.ticks
+                    .draw(frame, &style, self.length, self.step, self.rotate);
             });
         });
 

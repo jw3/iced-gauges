@@ -18,6 +18,7 @@ pub trait Tick {
         style: &Appearance,
         gauge_length: Radians,
         step_length: Radians,
+        base: Radians,
     );
 }
 
@@ -55,7 +56,14 @@ fn stroke<'a>(width: f32, color: Color) -> Stroke<'a> {
 }
 
 impl Tick for MajorMinor {
-    fn draw(&self, frame: &mut Frame, style: &Appearance, size: Radians, step: Radians) {
+    fn draw(
+        &self,
+        frame: &mut Frame,
+        style: &Appearance,
+        size: Radians,
+        step: Radians,
+        base: Radians,
+    ) {
         let mut i = self.first;
         let radius = frame::radius(frame) * style.tick_border_inset_ratio;
 
@@ -83,11 +91,7 @@ impl Tick for MajorMinor {
                         );
                         frame.translate(Vector::new(p1.x, p1.y));
                         if style.tick_labels {
-                            // todo;; is the formula on this rotate
-                            //        1/2 pi  -  gauge rotation
-                            //        for big pin gauge rotation is .6, so
-                            //        .6 + 2.5 = 1/2 pi
-                            frame.rotate(2.5);
+                            frame.rotate(6.2 - base.0);
                             frame.fill_text(Text {
                                 content: i.to_string(),
                                 color: style.tick_text_color,
