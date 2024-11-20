@@ -1,15 +1,14 @@
-use iced::widget::{canvas, container, toggler, Column, Row};
-use iced::{executor, window, Application, Element, Length, Renderer, Subscription, Task, Theme};
-use iced::{Color, Settings};
-use std::time::Duration;
-
 use crate::Msg::Update;
 use iced::time;
+use iced::widget::{canvas, container, toggler, Column, Row};
+use iced::{Color, Settings};
+use iced::{Element, Length, Subscription, Task, Theme};
 use iced_gauges::needle::Needles;
 use iced_gauges::pin::Pins;
 use iced_gauges::round::{Closing, Gauge};
 use iced_gauges::style::{Appearance, Style, DARK_DEFAULT, LIGHT_DEFAULT};
 use iced_gauges::tick::MajorMinor;
+use std::time::Duration;
 
 fn main() -> iced::Result {
     iced::application(
@@ -19,12 +18,10 @@ fn main() -> iced::Result {
     )
     .settings(Settings {
         antialiasing: true,
-        // window: window::Settings {
-        //     size: (1000, 700),
-        //     ..window::Settings::default()
-        // },
         ..Settings::default()
     })
+    .theme(Dashboard::theme)
+    .subscription(Dashboard::subscription)
     .run_with(Dashboard::new)
 }
 
@@ -202,11 +199,11 @@ impl Dashboard {
         //  indicator leds?....
 
         let mut gauges = self.gauge.iter();
-        // let bar = Row::new().push(container(toggler(
-        //     Some("Dark Mode".to_string()),
-        //     self.dark_mode,
-        //     Msg::ThemeChange,
-        // )));
+        let bar = Row::new().push(container(
+            toggler(self.dark_mode)
+                .label("Dark mode")
+                .on_toggle(Msg::ThemeChange),
+        ));
 
         let top = Row::new()
             .push(canvas(gauges.next().unwrap()).width(500).height(500))
@@ -219,22 +216,20 @@ impl Dashboard {
             .push(canvas(gauges.next().unwrap()).width(200).height(200))
             .push(canvas(gauges.next().unwrap()).width(200).height(200));
 
-        let row = Column::new() /*.push(bar)*/
-            .push(top)
-            .push(bottom);
+        let row = Column::new().push(bar).push(top).push(bottom);
         container(Column::new().push(row))
             .width(Length::Fill)
             .height(Length::Fill)
             .into()
     }
 
-    // fn theme(&self) -> Self::Theme {
-    //     if self.dark_mode {
-    //         Theme::Dark
-    //     } else {
-    //         Theme::Light
-    //     }
-    // }
+    fn theme(&self) -> Theme {
+        if self.dark_mode {
+            Theme::Dark
+        } else {
+            Theme::Light
+        }
+    }
 
     fn subscription(&self) -> Subscription<Msg> {
         use State::*;
