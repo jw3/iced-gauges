@@ -200,7 +200,10 @@ impl Dashboard {
         let mut gauges = self.gauge.iter();
         let bar = Row::new().push(container(
             toggler(self.dark_mode)
-                .label("Dark mode")
+                .label(format!(
+                    "{} mode",
+                    if self.dark_mode { "Night" } else { "Day" }
+                ))
                 .on_toggle(Msg::ThemeChange),
         ));
 
