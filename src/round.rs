@@ -2,12 +2,11 @@ use std::f32::consts::TAU;
 
 use iced::alignment::Horizontal;
 use iced::mouse::Cursor;
+use iced::widget::canvas;
 use iced::widget::canvas::path::arc::Elliptical;
 use iced::widget::canvas::path::Builder;
 use iced::widget::canvas::{stroke, Cache, Geometry, LineCap, Path, Program, Stroke};
-use iced::{mouse, Color, Point, Rectangle, Renderer, Theme, Vector};
-use iced_widget::canvas;
-use iced_widget::core::Widget;
+use iced::{mouse, Color, Point, Radians, Rectangle, Renderer, Theme, Vector};
 
 use crate::needle::{Needle, Needles};
 use crate::pin::{Pin, PinOrder, Pins};
@@ -20,8 +19,6 @@ pub enum Closing {
     Segment,
     Sector,
 }
-
-pub type Radians = f32;
 
 pub struct Gauge {
     name: Option<String>,
@@ -82,11 +79,11 @@ impl Gauge {
             ticks_gfx: Default::default(),
             pin_gfx: Default::default(),
             label_gfx: Default::default(),
-            length,
-            rotate,
+            length: Radians(length),
+            rotate: Radians(rotate),
             min,
             max,
-            step,
+            step: Radians(step),
             steps: steps as usize,
             closing,
             ticks,
@@ -140,7 +137,7 @@ impl Gauge {
                     center,
                     radii: Vector::new(radius, radius),
                     rotation: self.rotate,
-                    start_angle: 0.0,
+                    start_angle: Radians(0.0),
                     end_angle: self.length,
                 });
                 builder.line_to(center);
@@ -153,7 +150,7 @@ impl Gauge {
                     center,
                     radii: Vector::new(radius, radius),
                     rotation: self.rotate,
-                    start_angle: 0.0,
+                    start_angle: Radians(0.0),
                     end_angle: self.length,
                 });
                 builder.close();
@@ -219,7 +216,8 @@ impl<M> Program<M> for Gauge {
             frame.with_save(|frame| {
                 frame.translate(Vector::new(center.x, center.y));
                 frame.rotate(self.rotate);
-                self.ticks.draw(frame, &style, self.length, self.step);
+                self.ticks
+                    .draw(frame, &style, self.length, self.step, self.rotate);
             });
         });
 

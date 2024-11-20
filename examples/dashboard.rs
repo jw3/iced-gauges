@@ -1,27 +1,28 @@
-use iced::widget::{canvas, container, toggler, Column, Row};
-use iced::{
-    executor, window, Application, Command, Element, Length, Renderer, Subscription, Theme,
-};
-use iced::{Color, Settings};
-use std::time::Duration;
-
 use crate::Msg::Update;
 use iced::time;
+use iced::widget::{canvas, container, toggler, Column, Row};
+use iced::{Color, Settings};
+use iced::{Element, Length, Subscription, Task, Theme};
 use iced_gauges::needle::Needles;
 use iced_gauges::pin::Pins;
 use iced_gauges::round::{Closing, Gauge};
 use iced_gauges::style::{Appearance, Style, DARK_DEFAULT, LIGHT_DEFAULT};
 use iced_gauges::tick::MajorMinor;
+use std::time::Duration;
 
 fn main() -> iced::Result {
-    Dashboard::run(Settings {
+    iced::application(
+        "Dashboard demo for Round Gauge",
+        Dashboard::update,
+        Dashboard::view,
+    )
+    .settings(Settings {
         antialiasing: true,
-        window: window::Settings {
-            size: (1000, 700),
-            ..window::Settings::default()
-        },
         ..Settings::default()
     })
+    .theme(Dashboard::theme)
+    .subscription(Dashboard::subscription)
+    .run_with(Dashboard::new)
 }
 
 enum State {
@@ -30,41 +31,35 @@ enum State {
     Decel(f32),
 }
 
-struct Dashboard {
-    gauge: Vec<Gauge>,
-    state: State,
-    dark_mode: bool,
-}
-
 #[derive(Debug)]
 enum Msg {
     Update,
     ThemeChange(bool),
 }
 
-impl Application for Dashboard {
-    type Executor = executor::Default;
-    type Message = Msg;
-    type Theme = Theme;
-    type Flags = ();
+struct Dashboard {
+    gauge: Vec<Gauge>,
+    state: State,
+    dark_mode: bool,
+}
 
-    fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
+impl Dashboard {
+    fn new() -> (Self, Task<Msg>) {
         let ticks = MajorMinor::boxed(0.0, 5.0, 1.0, 0.30);
         let small_ticks = MajorMinor::boxed(0.0, 25.0, 5.0, 0.30);
-        let style = Style::Themed {
-            light: Appearance {
-                pin_border_width_ratio: 0.1,
-                pin_diameter_ratio: 0.5,
-                pin_color: Color::from_rgb(0.5, 0.5, 0.5),
-                ..LIGHT_DEFAULT
-            },
-            dark: Appearance {
-                pin_border_width_ratio: 0.1,
-                pin_diameter_ratio: 0.5,
-                tick_text_color: Color::WHITE,
-                ..DARK_DEFAULT
-            },
+        let light = Appearance {
+            pin_border_width_ratio: 0.1,
+            pin_diameter_ratio: 0.5,
+            pin_color: Color::from_rgb(0.5, 0.5, 0.5),
+            ..LIGHT_DEFAULT
         };
+        let dark = Appearance {
+            pin_border_width_ratio: 0.1,
+            pin_diameter_ratio: 0.5,
+            tick_text_color: Color::WHITE,
+            ..DARK_DEFAULT
+        };
+        let style = Style::Themed { light, dark };
         (
             Dashboard {
                 gauge: vec![
@@ -137,12 +132,12 @@ impl Application for Dashboard {
                             light: Appearance {
                                 tick_labels: false,
                                 pin_diameter_ratio: 0.8,
-                                ..Appearance::default()
+                                ..light
                             },
                             dark: Appearance {
                                 tick_labels: false,
                                 pin_diameter_ratio: 0.8,
-                                ..Appearance::default()
+                                ..dark
                             },
                         },
                     )
@@ -152,15 +147,11 @@ impl Application for Dashboard {
                 state: State::Accel(0.0),
                 dark_mode: false,
             },
-            Command::none(),
+            Task::none(),
         )
     }
 
-    fn title(&self) -> String {
-        String::from("Dashboard demo for Round Gauge")
-    }
-
-    fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
+    fn update(&mut self, message: Msg) -> Task<Msg> {
         match message {
             Update => match self.state {
                 State::Accel(v) => {
@@ -189,10 +180,10 @@ impl Application for Dashboard {
                 self.gauge.iter().for_each(|g| g.repaint());
             }
         }
-        Command::none()
+        Task::none()
     }
 
-    fn view(&self) -> Element<'_, Self::Message, Renderer<Self::Theme>> {
+    fn view(&self) -> Element<Msg> {
         // row
         //  col
         //   gauge 200x200
@@ -207,11 +198,14 @@ impl Application for Dashboard {
         //  indicator leds?....
 
         let mut gauges = self.gauge.iter();
-        let bar = Row::new().push(container(toggler(
-            Some("Dark Mode".to_string()),
-            self.dark_mode,
-            Msg::ThemeChange,
-        )));
+        let bar = Row::new().push(container(
+            toggler(self.dark_mode)
+                .label(format!(
+                    "{} mode",
+                    if self.dark_mode { "Night" } else { "Day" }
+                ))
+                .on_toggle(Msg::ThemeChange),
+        ));
 
         let top = Row::new()
             .push(canvas(gauges.next().unwrap()).width(500).height(500))
@@ -231,7 +225,7 @@ impl Application for Dashboard {
             .into()
     }
 
-    fn theme(&self) -> Self::Theme {
+    fn theme(&self) -> Theme {
         if self.dark_mode {
             Theme::Dark
         } else {
@@ -239,7 +233,7 @@ impl Application for Dashboard {
         }
     }
 
-    fn subscription(&self) -> Subscription<Self::Message> {
+    fn subscription(&self) -> Subscription<Msg> {
         use State::*;
 
         match self.state {

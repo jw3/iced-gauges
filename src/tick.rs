@@ -1,7 +1,7 @@
 use iced::widget::canvas::path::arc::Elliptical;
 use iced::widget::canvas::path::Builder;
 use iced::widget::canvas::{stroke, Frame, LineCap, Path, Stroke, Text};
-use iced::{Color, Point, Vector};
+use iced::{Color, Point, Radians, Vector};
 
 use crate::style::Appearance;
 use crate::util::frame;
@@ -12,7 +12,14 @@ pub trait Tick {
     /// The gauge radius is defined in pixels
     /// The gauge length defines the radians of needle movement
     /// The step length defines the radians of movement per unit value
-    fn draw(&self, frame: &mut Frame, style: &Appearance, gauge_length: f32, step_length: f32);
+    fn draw(
+        &self,
+        frame: &mut Frame,
+        style: &Appearance,
+        gauge_length: Radians,
+        step_length: Radians,
+        base: Radians,
+    );
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -49,7 +56,14 @@ fn stroke<'a>(width: f32, color: Color) -> Stroke<'a> {
 }
 
 impl Tick for MajorMinor {
-    fn draw(&self, frame: &mut Frame, style: &Appearance, size: f32, step: f32) {
+    fn draw(
+        &self,
+        frame: &mut Frame,
+        style: &Appearance,
+        size: Radians,
+        step: Radians,
+        base: Radians,
+    ) {
         let mut i = self.first;
         let radius = frame::radius(frame) * style.tick_border_inset_ratio;
 
@@ -63,8 +77,8 @@ impl Tick for MajorMinor {
             match (i % self.major_step == 0.0, i % self.minor_step == 0.0) {
                 (true, _) => {
                     let angle = i * step;
-                    let p1 = major.get_point(angle);
-                    let p2 = outer.get_point(angle);
+                    let p1 = major.get_point(angle.0);
+                    let p2 = outer.get_point(angle.0);
                     let path = Path::line(p1, p2);
 
                     frame.with_save(|frame| {
@@ -77,6 +91,7 @@ impl Tick for MajorMinor {
                         );
                         frame.translate(Vector::new(p1.x, p1.y));
                         if style.tick_labels {
+                            frame.rotate(6.2 - base.0);
                             frame.fill_text(Text {
                                 content: i.to_string(),
                                 color: style.tick_text_color,
@@ -87,8 +102,8 @@ impl Tick for MajorMinor {
                 }
                 (_, true) => {
                     let angle = i * step;
-                    let p1 = minor.get_point(angle);
-                    let p2 = outer.get_point(angle);
+                    let p1 = minor.get_point(angle.0);
+                    let p2 = outer.get_point(angle.0);
                     let path = Path::line(p1, p2);
 
                     frame.with_save(|frame| {
@@ -117,9 +132,9 @@ impl Tick for MajorMinor {
             builder.ellipse(Elliptical {
                 center: Point::ORIGIN,
                 radii: Vector::new(radius, radius),
-                rotation: 0.0,
-                start_angle: self.first * step,
-                end_angle: size,
+                rotation: Radians(0.0),
+                start_angle: Radians(self.first * step.0),
+                end_angle: Radians(size.0),
             });
             let out = builder.build();
             frame.stroke(

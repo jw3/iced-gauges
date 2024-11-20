@@ -1,6 +1,6 @@
 use iced::widget::{canvas, container, Row};
-use iced::Settings;
-use iced::{executor, Application, Command, Element, Length, Renderer, Theme};
+use iced::{Element, Length};
+use iced::{Settings, Task};
 use iced_gauges::needle::Needles;
 
 use iced_gauges::pin::Pins;
@@ -8,24 +8,26 @@ use iced_gauges::round::{Closing, Gauge};
 use iced_gauges::style::{Appearance, Style};
 use iced_gauges::tick::MajorMinor;
 
+fn main() -> iced::Result {
+    iced::application("Big Pin Demo", Dashboard::update, Dashboard::view)
+        .settings(Settings {
+            antialiasing: true,
+            ..Settings::default()
+        })
+        .run_with(Dashboard::new)
+}
+
+#[derive(Debug, Clone)]
+enum Message {
+    Next,
+}
+
 struct Dashboard {
     gauge: Gauge,
 }
 
-fn main() -> iced::Result {
-    Dashboard::run(Settings {
-        antialiasing: true,
-        ..Settings::default()
-    })
-}
-
-impl Application for Dashboard {
-    type Executor = executor::Default;
-    type Message = ();
-    type Theme = Theme;
-    type Flags = ();
-
-    fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
+impl Dashboard {
+    fn new() -> (Self, Task<Message>) {
         let style = Style::Custom(Appearance {
             pin_diameter_ratio: 1.0,
             pin_border_width_ratio: 0.10,
@@ -36,19 +38,12 @@ impl Application for Dashboard {
         let mut gauge = Gauge::new(0.0, 100.0, 0.30, 0.60, Closing::None, ticks, style);
         gauge.pin = Box::new(Pins::Hollow);
         gauge.needle = Box::new(Needles::Triangle);
-
-        (Dashboard { gauge }, Command::none())
+        (Dashboard { gauge }, Task::none())
     }
-
-    fn title(&self) -> String {
-        String::from("Dashboard demo for Round Gauge")
+    fn update(&mut self, message: Message) -> Task<Message> {
+        Task::none()
     }
-
-    fn update(&mut self, _: Self::Message) -> Command<Self::Message> {
-        Command::none()
-    }
-
-    fn view(&self) -> Element<'_, Self::Message, Renderer<Self::Theme>> {
+    fn view(&self) -> Element<Message> {
         container(Row::new().push(canvas(&self.gauge).width(500).height(500)))
             .width(Length::Fill)
             .height(Length::Fill)
