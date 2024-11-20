@@ -47,20 +47,19 @@ impl Dashboard {
     fn new() -> (Self, Task<Msg>) {
         let ticks = MajorMinor::boxed(0.0, 5.0, 1.0, 0.30);
         let small_ticks = MajorMinor::boxed(0.0, 25.0, 5.0, 0.30);
-        let style = Style::Themed {
-            light: Appearance {
-                pin_border_width_ratio: 0.1,
-                pin_diameter_ratio: 0.5,
-                pin_color: Color::from_rgb(0.5, 0.5, 0.5),
-                ..LIGHT_DEFAULT
-            },
-            dark: Appearance {
-                pin_border_width_ratio: 0.1,
-                pin_diameter_ratio: 0.5,
-                tick_text_color: Color::WHITE,
-                ..DARK_DEFAULT
-            },
+        let light = Appearance {
+            pin_border_width_ratio: 0.1,
+            pin_diameter_ratio: 0.5,
+            pin_color: Color::from_rgb(0.5, 0.5, 0.5),
+            ..LIGHT_DEFAULT
         };
+        let dark = Appearance {
+            pin_border_width_ratio: 0.1,
+            pin_diameter_ratio: 0.5,
+            tick_text_color: Color::WHITE,
+            ..DARK_DEFAULT
+        };
+        let style = Style::Themed { light, dark };
         (
             Dashboard {
                 gauge: vec![
@@ -133,12 +132,12 @@ impl Dashboard {
                             light: Appearance {
                                 tick_labels: false,
                                 pin_diameter_ratio: 0.8,
-                                ..Appearance::default()
+                                ..light
                             },
                             dark: Appearance {
                                 tick_labels: false,
                                 pin_diameter_ratio: 0.8,
-                                ..Appearance::default()
+                                ..dark
                             },
                         },
                     )
